@@ -81,5 +81,9 @@ describe('Hub', () => {
       expect(subuserEnt).to.have.property('b', true);
       expect(subuserEnt).to.have.deep.property('c.d', true);
     });
+    it('should correctly handle profile deletes', () => {
+      hub.deleteProfile(teamOneProfile.name);
+      console.log(hub.registry.registry);
+    });
   });
 });

@@ -1,10 +1,11 @@
 import EventEmitter from 'eventemitter3';
 
-import { EVENT as CEVENT } from '../constants/compiler-constants';
-
+import { COMPILER } from './constants';
 import Registry from './registry';
 import Compiler from './compiler';
 import Cache from './cache';
+
+const { EVENT } = COMPILER;
 
 class Hub extends EventEmitter {
 
@@ -13,9 +14,9 @@ class Hub extends EventEmitter {
     this.registry = new Registry();
     this.compiler = new Compiler();
     this.cache = new Cache();
-    this.registry.on(CEVENT.PROCESS, this.compiler.process);
-    this.compiler.on(CEVENT.COMPILED, this.registry.profileCompiled);
-    this.compiler.on(CEVENT.COMPILED, this.cache.set);
+    this.registry.on(EVENT.PROCESS, this.compiler.process);
+    this.compiler.on(EVENT.COMPILED, this.registry.profileCompiled);
+    this.compiler.on(EVENT.COMPILED, this.cache.set);
     /*this.compiler.on(CEVENT.COMPILED, (name, entitlements) => {
       console.log(`Profile ${name} with entitlements`, entitlements);
     });*/
@@ -23,6 +24,10 @@ class Hub extends EventEmitter {
 
   handleProfile(profile) {
     this.registry.registerProfile(profile);
+  }
+
+  deleteProfile(name) {
+    this.registry.deleteProfile(name);
   }
 
 }

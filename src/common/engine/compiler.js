@@ -1,7 +1,9 @@
 import EventEmitter from 'eventemitter3';
 import Immutable from 'immutable';
 
-import { EVENT } from '../constants/compiler-constants';
+import { COMPILER } from './constants';
+
+const { EVENT } = COMPILER;
 
 class Compiler extends EventEmitter {
 

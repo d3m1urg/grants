@@ -1,7 +1,9 @@
 import EventEmitter from 'eventemitter3';
 import Profile from './profile';
-import { STATE as PSTATE, EVENT as PEVENT } from '../constants/profile-constants';
-import { EVENT as CEVENT } from '../constants/compiler-constants';
+import { COMPILER, PROFILE } from './constants';
+
+const { EVENT: CEVENT } = COMPILER;
+const { STATE: PSTATE, EVENT: PEVENT } = PROFILE;
 
 class Registry extends EventEmitter {
 
@@ -51,6 +53,9 @@ class Registry extends EventEmitter {
     profile.on(PEVENT.COMPILE, (name) => {
       this.emit(CEVENT.PROCESS, this.raw.get(name));
     });
+    profile.on(PEVENT.INVALIDATED, (name) => {
+      this.emit(name, name, PSTATE.INVALID);
+    });
   }
 
   /**
@@ -74,16 +79,22 @@ class Registry extends EventEmitter {
     return [canCompile, dependenciesMap];
   }
 
-  getProfile() {
-
+  updateProfile(rawProfile) {
+    this.deleteProfile(rawProfile.name);
+    this.registerProfile(rawProfile);
   }
 
-  updateProfile() {
-
-  }
-
-  deleteProfile() {
-
+  deleteProfile(name) {
+    this.emit(name, name, PSTATE.INVALID);
+    const profile = this.registry.get(name);
+    const rawProfile = this.raw.get(name);
+    const listeners = Array.isArray(rawProfile.dependencies) ? [...rawProfile.dependencies, profile.name] : [profile.name];
+    listeners.forEach((lname) => {
+      this.removeListener(lname, profile.stateChanged);
+    });
+    profile.removeAllListeners(PEVENT.COMPILE);
+    this.registry.delete(name);
+    this.raw.delete(name);
   }
 
 }
