@@ -2,8 +2,8 @@ import EventEmitter from 'eventemitter3';
 import Profile from './profile';
 import { COMPILER, PROFILE } from './constants';
 
-const { EVENT: CEVENT } = COMPILER;
-const { STATE: PSTATE, EVENT: PEVENT } = PROFILE;
+const { EVENT: { PROCESS } } = COMPILER;
+const { STATE: { VALID, INVALID }, EVENT: { COMPILE, INVALIDATE } } = PROFILE;
 
 class Registry extends EventEmitter {
 
@@ -15,7 +15,7 @@ class Registry extends EventEmitter {
   }
 
   profileCompiled(name) {
-    this.emit(name, name, PSTATE.VALID);
+    this.emit(name, name, VALID);
   }
 
   /**
@@ -35,13 +35,13 @@ class Registry extends EventEmitter {
     const profileData = Object.assign({}, rawProfile,
       {
         dependencies: dependenciesMap,
-        state: PSTATE.INVALID,
+        state: INVALID,
       });
     const profile = new Profile(profileData);
     this.enableListeners(rawProfile, profile);
     this.registry.set(profile.name, profile);
     if (canCompile) {
-      this.emit(CEVENT.PROCESS, rawProfile);
+      this.emit(PROCESS, rawProfile);
     }
   }
 
@@ -50,11 +50,11 @@ class Registry extends EventEmitter {
     listeners.forEach((name) => {
       this.on(name, profile.stateChanged);
     });
-    profile.on(PEVENT.COMPILE, (name) => {
-      this.emit(CEVENT.PROCESS, this.raw.get(name));
+    profile.on(COMPILE, (name) => {
+      this.emit(PROCESS, this.raw.get(name));
     });
-    profile.on(PEVENT.INVALIDATED, (name) => {
-      this.emit(name, name, PSTATE.INVALID);
+    profile.on(INVALIDATE, (name) => {
+      this.emit(name, name, INVALID);
     });
   }
 
@@ -71,7 +71,7 @@ class Registry extends EventEmitter {
     rawProfile.dependencies.forEach((depName) => {
       let isDepReady = false;
       if (this.registry.has(depName)) {
-        isDepReady = this.registry.get(depName).state === PSTATE.VALID;
+        isDepReady = this.registry.get(depName).state === VALID;
       }
       dependenciesMap.set(depName, isDepReady);
     });
@@ -85,14 +85,14 @@ class Registry extends EventEmitter {
   }
 
   deleteProfile(name) {
-    this.emit(name, name, PSTATE.INVALID);
+    this.emit(name, name, INVALID);
     const profile = this.registry.get(name);
     const rawProfile = this.raw.get(name);
     const listeners = Array.isArray(rawProfile.dependencies) ? [...rawProfile.dependencies, profile.name] : [profile.name];
     listeners.forEach((lname) => {
       this.removeListener(lname, profile.stateChanged);
     });
-    profile.removeAllListeners(PEVENT.COMPILE);
+    profile.removeAllListeners(COMPILE);
     this.registry.delete(name);
     this.raw.delete(name);
   }

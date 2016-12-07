@@ -3,7 +3,7 @@ import Immutable from 'immutable';
 
 import { COMPILER } from './constants';
 
-const { EVENT } = COMPILER;
+const { EVENT: { COMPILED } } = COMPILER;
 
 class Compiler extends EventEmitter {
 
@@ -23,7 +23,7 @@ class Compiler extends EventEmitter {
       compiledProfile = profilesList.reduce((prev, next) => prev.mergeDeepWith((no, yes) => yes, next));
       this.cache = this.cache.set(profile.name, compiledProfile);
     }
-    this.emit(EVENT.COMPILED, profile.name, compiledProfile.toJS());
+    this.emit(COMPILED, profile.name, compiledProfile.toJS());
   }
 
   remove(name) {

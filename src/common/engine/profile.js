@@ -2,13 +2,13 @@ import EventEmitter from 'eventemitter3';
 
 import { PROFILE } from './constants';
 
-const { STATE, EVENT } = PROFILE;
+const { STATE: { INVALID, VALID }, EVENT: { INVALIDATED, COMPILE } } = PROFILE;
 
 class Profile extends EventEmitter {
 
   constructor({
     name, entitlements = {}, dependencies = new Map(),
-    state = STATE.INVALID, metadata = {} } = {}) {
+    state = INVALID, metadata = {} } = {}) {
     super();
     if (!name) {
       throw new Error(`Profile 'name' must be defined, instead got ${name}`);
@@ -22,18 +22,17 @@ class Profile extends EventEmitter {
   }
 
   stateChanged(name, state) {
-    // console.log('[ stateChanged ->', this.name, ']', name, state);
     if (name === this.name && this.state !== state) {
       this.state = state;
       return;
     }
-    if (state === STATE.INVALID && this.dependencies.get(name)) {
-      this.state = STATE.INVALID;
-      this.emit(EVENT.INVALIDATED, this.name);
-    } else if (state === STATE.VALID && this.dependencies.get(name) === false) {
+    if (state === INVALID && this.dependencies.get(name)) {
+      this.state = INVALID;
+      this.emit(INVALIDATED, this.name);
+    } else if (state === VALID && this.dependencies.get(name) === false) {
       this.dependencies.set(name, true);
       if (this.canCompile()) {
-        this.emit(EVENT.COMPILE, this.name);
+        this.emit(COMPILE, this.name);
       }
     }
   }
