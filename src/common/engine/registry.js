@@ -55,6 +55,7 @@ class Registry extends EventEmitter {
     });
     profile.on(INVALIDATE, (name) => {
       this.emit(name, name, INVALID);
+      this.emit(INVALIDATE, name);
     });
   }
 
@@ -95,6 +96,10 @@ class Registry extends EventEmitter {
     profile.removeAllListeners(COMPILE);
     this.registry.delete(name);
     this.raw.delete(name);
+  }
+
+  hasProfile(name) {
+    return this.registry.has(name);
   }
 
 }

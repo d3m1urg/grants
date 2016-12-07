@@ -1,6 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies, no-undef, no-unused-expressions */
 import { expect } from 'chai';
 import Hub from '../../../src/common/engine/hub';
+import { PROFILE } from '../../../src/common/engine/constants';
+
+const { STATE: { INVALID } } = PROFILE;
 
 const rootProfile = {
   name: 'root',
@@ -81,9 +84,49 @@ describe('Hub', () => {
       expect(subuserEnt).to.have.property('b', true);
       expect(subuserEnt).to.have.deep.property('c.d', true);
     });
-    it('should correctly handle profile deletes', () => {
-      hub.deleteProfile(teamOneProfile.name);
-      console.log(hub.registry.registry);
+    it('should correctly handle profile deleting', () => {
+      hub.deleteProfile(teamTwoProfile.name);
+      const userEnt = hub.cache.get(userProfile.name);
+      const subuserEnt = hub.cache.get(subUserProfile.name);
+      expect(userEnt).to.not.exist;
+      expect(subuserEnt).to.not.exist;
+      const userProf = hub.registry.registry.get(userProfile.name);
+      const subuserProf = hub.registry.registry.get(subUserProfile.name);
+      expect(userProf).to.have.property('state', INVALID);
+      expect(subuserProf).to.have.property('state', INVALID);
+    });
+    it('should correctly handle profile restoring', () => {
+      hub.handleProfile(Object.assign({}, teamTwoProfile, { entitlements: {
+        b: false,
+        c: {
+          d: false,
+        },
+      } }));
+      const teamTwoEnt = hub.cache.get(teamTwoProfile.name);
+      const userEnt = hub.cache.get(userProfile.name);
+      const subuserEnt = hub.cache.get(subUserProfile.name);
+      expect(teamTwoEnt).to.have.property('a', 1);
+      expect(teamTwoEnt).to.have.property('b', false);
+      expect(teamTwoEnt).to.have.deep.property('c.d', false);
+      expect(userEnt).to.have.property('a', 1);
+      expect(userEnt).to.have.property('b', false);
+      expect(userEnt).to.have.deep.property('c.d', true);
+      expect(subuserEnt).to.have.property('a', 0);
+      expect(subuserEnt).to.have.property('b', false);
+      expect(subuserEnt).to.have.deep.property('c.d', true);
+    });
+    it('should correctly handle profile updates', () => {
+      hub.handleProfile(Object.assign({}, userProfile, { entitlements: {
+        c: null,
+      } }));
+      const userEnt = hub.cache.get(userProfile.name);
+      const subuserEnt = hub.cache.get(subUserProfile.name);
+      expect(userEnt).to.have.property('a', 1);
+      expect(userEnt).to.have.property('b', false);
+      expect(userEnt.c).to.be.null;
+      expect(subuserEnt).to.have.property('a', 0);
+      expect(subuserEnt).to.have.property('b', false);
+      expect(subuserEnt.c).to.be.null;
     });
   });
 });

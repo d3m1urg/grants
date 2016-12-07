@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3';
 
 import { PROFILE } from './constants';
 
-const { STATE: { INVALID, VALID }, EVENT: { INVALIDATED, COMPILE } } = PROFILE;
+const { STATE: { INVALID, VALID }, EVENT: { INVALIDATE, COMPILE } } = PROFILE;
 
 class Profile extends EventEmitter {
 
@@ -28,7 +28,8 @@ class Profile extends EventEmitter {
     }
     if (state === INVALID && this.dependencies.get(name)) {
       this.state = INVALID;
-      this.emit(INVALIDATED, this.name);
+      this.dependencies.set(name, false);
+      this.emit(INVALIDATE, this.name);
     } else if (state === VALID && this.dependencies.get(name) === false) {
       this.dependencies.set(name, true);
       if (this.canCompile()) {

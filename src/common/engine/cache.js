@@ -6,6 +6,7 @@ class Cache extends EventEmitter {
     super();
     this.cache = new Map();
     this.set = this.set.bind(this);
+    this.delete = this.delete.bind(this);
   }
 
   set(key, value) {

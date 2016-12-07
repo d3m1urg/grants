@@ -11,6 +11,7 @@ class Compiler extends EventEmitter {
     super();
     this.cache = Immutable.Map({});
     this.process = this.process.bind(this);
+    this.delete = this.delete.bind(this);
   }
 
   process(profile) {
@@ -26,7 +27,7 @@ class Compiler extends EventEmitter {
     this.emit(COMPILED, profile.name, compiledProfile.toJS());
   }
 
-  remove(name) {
+  delete(name) {
     this.cache = this.cache.delete(name);
   }
 
