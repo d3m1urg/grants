@@ -20,6 +20,7 @@ class Profile extends EventEmitter {
   }
 
   stateChanged(name, state) {
+    // console.log('[ stateChanged ->', this.name, ']', name, state);
     if (name === this.name && this.state !== state) {
       this.state = state;
       return;
@@ -27,8 +28,8 @@ class Profile extends EventEmitter {
     if (state === STATE.INVALID && this.dependencies.get(name)) {
       this.state = STATE.INVALID;
       this.emit(this.name, this.name, EVENT.INVALID);
-    } else if (state === STATE.VALID && !this.dependencies.get(name)) {
-      this.dependencies.set(name, state);
+    } else if (state === STATE.VALID && this.dependencies.get(name) === false) {
+      this.dependencies.set(name, true);
       if (this.canCompile()) {
         this.emit(EVENT.COMPILE, this.name);
       }

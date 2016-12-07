@@ -12,15 +12,16 @@ class Compiler extends EventEmitter {
   }
 
   process(profile) {
-    if (profile.dependencies.length === 0) {
-      this.cache = this.cache.set(profile.name,
-        Immutable.fromJS(profile.entitlements));
+    let compiledProfile;
+    if (!profile.dependencies || profile.dependencies.length === 0) {
+      compiledProfile = Immutable.fromJS(profile.entitlements);
+      this.cache = this.cache.set(profile.name, compiledProfile);
     } else {
       const profilesList = [...profile.dependencies.map(name => this.cache.get(name)), Immutable.fromJS(profile.entitlements)];
-      const compiledProfile = profilesList.reduce((prev, next) => prev.mergeDeepWith((no, yes) => yes, next));
+      compiledProfile = profilesList.reduce((prev, next) => prev.mergeDeepWith((no, yes) => yes, next));
       this.cache = this.cache.set(profile.name, compiledProfile);
     }
-    this.emit(EVENT.COMPILED, profile.name);
+    this.emit(EVENT.COMPILED, profile.name, compiledProfile.toJS());
   }
 
   remove(name) {

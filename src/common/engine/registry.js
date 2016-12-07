@@ -8,7 +8,7 @@ class Registry extends EventEmitter {
   constructor() {
     super();
     this.registry = new Map();
-    // this.compiler.on(CEVENT.COMPILED, this.profileCompiled);
+    this.raw = new Map();
     this.profileCompiled = this.profileCompiled.bind(this);
   }
 
@@ -28,6 +28,7 @@ class Registry extends EventEmitter {
    * @return {[type]}
    */
   registerProfile(rawProfile) {
+    this.raw.set(rawProfile.name, rawProfile);
     const [canCompile, dependenciesMap] = this.canBeCompiled(rawProfile);
     const profileData = Object.assign({}, rawProfile,
       {
@@ -35,16 +36,20 @@ class Registry extends EventEmitter {
         state: PSTATE.INVALID,
       });
     const profile = new Profile(profileData);
-    this.listenToDependencies(rawProfile, profile);
+    this.enableListeners(rawProfile, profile);
+    this.registry.set(profile.name, profile);
     if (canCompile) {
       this.emit(CEVENT.PROCESS, rawProfile);
     }
   }
 
-  listenToDependencies(rawProfile, profile) {
-    const listeners = [...rawProfile.dependencies, profile.name];
+  enableListeners(rawProfile, profile) {
+    const listeners = Array.isArray(rawProfile.dependencies) ? [...rawProfile.dependencies, profile.name] : [profile.name];
     listeners.forEach((name) => {
       this.on(name, profile.stateChanged);
+    });
+    profile.on(PEVENT.COMPILE, (name) => {
+      this.emit(CEVENT.PROCESS, this.raw.get(name));
     });
   }
 
@@ -55,6 +60,9 @@ class Registry extends EventEmitter {
    */
   canBeCompiled(rawProfile) {
     const dependenciesMap = new Map();
+    if (!rawProfile.dependencies || rawProfile.dependencies.length === 0) {
+      return [true, dependenciesMap];
+    }
     rawProfile.dependencies.forEach((depName) => {
       let isDepReady = false;
       if (this.registry.has(depName)) {
