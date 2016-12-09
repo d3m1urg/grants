@@ -27,12 +27,12 @@ class Profile extends EventEmitter {
       this.state = state;
       return;
     }
-    if (state === INVALID && this.dependencies.get(name)) {
-      this.state = INVALID;
-      this.dependencies.set(name, false);
+    if (state === INVALID && this.dependencies.get(name) === VALID) {
+      this.state = state;
+      this.dependencies.set(name, state);
       this.emit(INVALIDATE, this.name);
-    } else if (state === VALID && this.dependencies.get(name) === false) {
-      this.dependencies.set(name, true);
+    } else if (state === VALID && this.dependencies.get(name) === INVALID) {
+      this.dependencies.set(name, state);
       if (this.canCompile()) {
         this.emit(COMPILE, this.name);
       }
@@ -40,7 +40,7 @@ class Profile extends EventEmitter {
   }
 
   canCompile() {
-    return [...this.dependencies.values()].every(item => item);
+    return [...this.dependencies.values()].every(item => item === VALID);
   }
 
 }
