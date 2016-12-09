@@ -1,0 +1,57 @@
+{
+  "$schema":    "http://json-schema.org/draft-04/schema#",
+  "title":      "Grants.js entitlements schema",
+  "type":       "object",
+  "required":   ["name", "label", "type", "init", "children", "revision"],
+  "properties":{
+    "name":       {"$ref": "#/definitions/child/properties/name"},
+    "label":      {"$ref": "#/definitions/child/properties/label"},
+    "type":       {"$ref": "#/definitions/child/properties/type"},
+    "init":       {"$ref": "#/definitions/child/properties/init"},
+    "children":   {"$ref": "#/definitions/child/properties/children"},
+    "revision":   {"type": "string"},
+  },
+  "definitions":  {
+    "child":  {
+      "type":       "object",
+      "required":   ["name", "label", "type", "init", "restrict"],
+      "properties": {
+        "name":       {"type": "string"},
+        "label":      {"type": "string"},
+        "type":       {"type": "string"},
+        "init":       {"type": ["boolean", "number", "string", "array"]},
+        "restrict":   {
+          "type": "object",
+          "required": ["rules"],
+          "properties": {
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "define": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "description", "fn", "errorText"],
+                "properties": {
+                  "name": {"type": "string"},
+                  "description": {"type": "string"},
+                  "fn": {"type": "string"},
+                  "errorMessage": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "children":   {
+          "type":   "array",
+          "items":  {
+            "type": {"$ref": "#/definitions/child"}
+          }
+        }
+      }
+    }
+  }
+}
