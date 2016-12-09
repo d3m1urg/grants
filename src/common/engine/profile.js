@@ -8,7 +8,7 @@ class Profile extends EventEmitter {
 
   constructor({
     name, entitlements = {}, dependencies = new Map(),
-    state = INVALID, metadata = {} } = {}) {
+    state = INVALID, raw = {}, metadata = {} } = {}) {
     super();
     if (!name) {
       throw new Error(`Profile 'name' must be defined, instead got ${name}`);
@@ -16,8 +16,9 @@ class Profile extends EventEmitter {
     this.name = name;
     this.entitlements = entitlements;
     this.dependencies = dependencies;
-    this.metadata = metadata;
     this.state = state;
+    this.raw = raw;
+    this.metadata = metadata;
     this.stateChanged = this.stateChanged.bind(this);
   }
 

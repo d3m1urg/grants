@@ -10,7 +10,6 @@ class Registry extends EventEmitter {
   constructor() {
     super();
     this.registry = new Map();
-    this.raw = new Map();
     this.profileCompiled = this.profileCompiled.bind(this);
   }
 
@@ -30,12 +29,13 @@ class Registry extends EventEmitter {
    * @return {[type]}
    */
   registerProfile(rawProfile) {
-    this.raw.set(rawProfile.name, rawProfile);
     const [canCompile, dependenciesMap] = this.canBeCompiled(rawProfile);
     const profileData = Object.assign({}, rawProfile,
       {
         dependencies: dependenciesMap,
         state: INVALID,
+        entitlements: {},
+        raw: rawProfile,
       });
     const profile = new Profile(profileData);
     this.enableListeners(rawProfile, profile);
@@ -51,7 +51,7 @@ class Registry extends EventEmitter {
       this.on(name, profile.stateChanged);
     });
     profile.on(COMPILE, (name) => {
-      this.emit(PROCESS, this.raw.get(name));
+      this.emit(PROCESS, this.registry.get(name).raw);
     });
     profile.on(INVALIDATE, (name) => {
       this.emit(name, name, INVALID);
@@ -88,14 +88,13 @@ class Registry extends EventEmitter {
   deleteProfile(name) {
     this.emit(name, name, INVALID);
     const profile = this.registry.get(name);
-    const rawProfile = this.raw.get(name);
+    const rawProfile = profile.raw;
     const listeners = Array.isArray(rawProfile.dependencies) ? [...rawProfile.dependencies, profile.name] : [profile.name];
     listeners.forEach((lname) => {
       this.removeListener(lname, profile.stateChanged);
     });
     profile.removeAllListeners(COMPILE);
     this.registry.delete(name);
-    this.raw.delete(name);
   }
 
   hasProfile(name) {
