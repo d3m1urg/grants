@@ -22,7 +22,7 @@ class Registry extends EventEmitter {
    * {
    *    name: 'string',
    *    entitlements: {},
-   *    dependencies: [], -> dependencies must be sorted according to priorities, from least to most
+   *    dependencies: [], -> dependencies must be sorted ascendingly according to priorities
    *    metadata: {}
    * }
    * @param  {[type]}
@@ -46,7 +46,9 @@ class Registry extends EventEmitter {
   }
 
   enableListeners(rawProfile, profile) {
-    const listeners = Array.isArray(rawProfile.dependencies) ? [...rawProfile.dependencies, profile.name] : [profile.name];
+    const listeners = Array.isArray(rawProfile.dependencies) ?
+                        [...rawProfile.dependencies, profile.name] :
+                        [profile.name];
     listeners.forEach((name) => {
       this.on(name, profile.stateChanged);
     });
@@ -69,14 +71,19 @@ class Registry extends EventEmitter {
     if (!rawProfile.dependencies || rawProfile.dependencies.length === 0) {
       return [true, dependenciesMap];
     }
+    let canCompile = true;
     rawProfile.dependencies.forEach((depName) => {
-      let isDepReady = false;
+      let depState = INVALID;
       if (this.registry.has(depName)) {
-        isDepReady = this.registry.get(depName).state === VALID;
+        depState = this.registry.get(depName).state;
+        if (depState === INVALID) {
+          canCompile = false;
+        }
+      } else {
+        canCompile = false;
       }
-      dependenciesMap.set(depName, isDepReady);
+      dependenciesMap.set(depName, depState);
     });
-    const canCompile = [...dependenciesMap.values()].every(item => item);
     return [canCompile, dependenciesMap];
   }
 
@@ -89,7 +96,9 @@ class Registry extends EventEmitter {
     this.emit(name, name, INVALID);
     const profile = this.registry.get(name);
     const rawProfile = profile.raw;
-    const listeners = Array.isArray(rawProfile.dependencies) ? [...rawProfile.dependencies, profile.name] : [profile.name];
+    const listeners = Array.isArray(rawProfile.dependencies) ?
+                        [...rawProfile.dependencies, profile.name] :
+                        [profile.name];
     listeners.forEach((lname) => {
       this.removeListener(lname, profile.stateChanged);
     });
