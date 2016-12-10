@@ -1,6 +1,6 @@
 {
   "$schema":    "http://json-schema.org/draft-04/schema#",
-  "title":      "Grants.js entitlements schema",
+  "title":      "Grants.js common entitlements schema",
   "type":       "object",
   "required":   ["name", "label", "type", "init", "children", "revision"],
   "properties":{
@@ -9,7 +9,7 @@
     "type":       {"$ref": "#/definitions/child/properties/type"},
     "init":       {"$ref": "#/definitions/child/properties/init"},
     "children":   {"$ref": "#/definitions/child/properties/children"},
-    "revision":   {"type": "string"},
+    "revision":   {"type": "string"}
   },
   "definitions":  {
     "child":  {
@@ -19,7 +19,7 @@
         "name":       {"type": "string"},
         "label":      {"type": "string"},
         "type":       {"type": "string"},
-        "init":       {"type": ["boolean", "number", "string", "array"]},
+        "init":       {"type": ["boolean", "number", "string", "array", "object", "null"]},
         "restrict":   {
           "type": "object",
           "required": ["rules"],
