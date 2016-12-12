@@ -4,7 +4,8 @@
   "description": "Simple entitlements management for complex cases.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-register --reporten nyan --recursive test/**/*.test.js",
+    "build": "babel src/common -d dist/common",
+    "test": "npm run build && mocha --timeout 10000 --compilers js:babel-register --reporten nyan --recursive test/**/*.test.js",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --compilers js:babel-register --reporter nyan --recursive test/**/*.test.js"
   },
   "repository": {
@@ -34,7 +35,8 @@
     "koa-helmet": "^1.0.0",
     "koa-jwt": "^1.2.0",
     "koa-router": "^5.4.0",
-    "koa-static": "^2.0.0"
+    "koa-static": "^2.0.0",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "babel": "^6.5.2",
@@ -44,6 +46,7 @@
     "babel-preset-react": "^6.16.0",
     "babel-register": "^6.18.0",
     "chai": "^3.5.0",
+    "chai-as-promised": "^6.0.0",
     "eslint": "^3.11.1",
     "eslint-config-airbnb": "^13.0.0",
     "eslint-plugin-import": "^2.2.0",

@@ -1,7 +1,12 @@
 /* eslint-disable import/no-extraneous-dependencies, no-undef, no-unused-expressions */
-import { expect } from 'chai';
-import Hub from '../../../src/common/engine/hub';
-import { PROFILE } from '../../../src/common/engine/constants';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import Hub from '../../../dist/common/engine/hub';
+import { PROFILE } from '../../../dist/common/engine/constants';
+
+chai.use(chaiAsPromised);
+
+const { expect } = chai;
 
 const { STATE: { INVALID } } = PROFILE;
 
@@ -57,12 +62,14 @@ const hub = new Hub();
 
 describe('Hub', () => {
   describe('Profiles compilation', () => {
-    it('should compile profiles in the correct order', () => {
-      hub.handleProfile(subUserProfile);
-      hub.handleProfile(teamOneProfile);
-      hub.handleProfile(rootProfile);
-      hub.handleProfile(userProfile);
-      hub.handleProfile(teamTwoProfile);
+    it('should compile profiles in the correct order', () => expect(Promise.all([
+      hub.handleProfile(subUserProfile),
+      hub.handleProfile(teamOneProfile),
+      hub.handleProfile(rootProfile),
+      hub.handleProfile(userProfile),
+      hub.handleProfile(teamTwoProfile),
+    ])).to.eventually.be.fulfilled);
+    it('should hold correct data in cache after compilation', () => {
       const rootEnt = hub.cache.get(rootProfile.name);
       const teamOneEnt = hub.cache.get(teamOneProfile.name);
       const teamTwoEnt = hub.cache.get(teamTwoProfile.name);
@@ -84,7 +91,7 @@ describe('Hub', () => {
       expect(subuserEnt).to.have.property('b', true);
       expect(subuserEnt).to.have.deep.property('c.d', true);
     });
-    it('should correctly handle profile deleting', () => {
+    it('should hold correct correct data in cache after profile deleting', () => {
       hub.deleteProfile(teamTwoProfile.name);
       const userEnt = hub.cache.get(userProfile.name);
       const subuserEnt = hub.cache.get(subUserProfile.name);
@@ -95,30 +102,33 @@ describe('Hub', () => {
       expect(userProf).to.have.property('state', INVALID);
       expect(subuserProf).to.have.property('state', INVALID);
     });
-    it('should correctly handle profile restoring', () => {
-      hub.handleProfile(Object.assign({}, teamTwoProfile, { entitlements: {
-        b: false,
-        c: {
-          d: false,
-        },
-      } }));
+    it('should correctly restore profile', () => expect(hub.handleProfile(Object.assign({}, teamTwoProfile, { entitlements: {
+      b: false,
+      c: {
+        d: false,
+      },
+    } }))).to.eventually.be.fulfilled);
+    it('should hold correct data in cache after restoring', (done) => {
       const teamTwoEnt = hub.cache.get(teamTwoProfile.name);
-      const userEnt = hub.cache.get(userProfile.name);
-      const subuserEnt = hub.cache.get(subUserProfile.name);
       expect(teamTwoEnt).to.have.property('a', 1);
       expect(teamTwoEnt).to.have.property('b', false);
       expect(teamTwoEnt).to.have.deep.property('c.d', false);
+      const userEnt = hub.cache.get(userProfile.name);
       expect(userEnt).to.have.property('a', 1);
       expect(userEnt).to.have.property('b', false);
       expect(userEnt).to.have.deep.property('c.d', true);
-      expect(subuserEnt).to.have.property('a', 0);
-      expect(subuserEnt).to.have.property('b', false);
-      expect(subuserEnt).to.have.deep.property('c.d', true);
+      setTimeout(() => {
+        const subuserEnt = hub.cache.get(subUserProfile.name);
+        expect(subuserEnt).to.have.property('a', 0);
+        expect(subuserEnt).to.have.property('b', false);
+        expect(subuserEnt).to.have.deep.property('c.d', true);
+        done();
+      }, 0);
     });
-    it('should correctly handle profile updates', () => {
-      hub.handleProfile(Object.assign({}, userProfile, { entitlements: {
-        c: null,
-      } }));
+    it('should correctly update profile', () => hub.handleProfile(Object.assign({}, userProfile, { entitlements: {
+      c: null,
+    } })));
+    it('should cache correct data after update', () => {
       const userEnt = hub.cache.get(userProfile.name);
       const subuserEnt = hub.cache.get(subUserProfile.name);
       expect(userEnt).to.have.property('a', 1);

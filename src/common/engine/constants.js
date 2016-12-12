@@ -25,3 +25,4 @@ export const COMPILER = {
     COMPILED: 'COMPILER_EVENT_COMPILED',
   },
 };
+
