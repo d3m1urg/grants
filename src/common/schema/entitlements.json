@@ -14,13 +14,13 @@
   "definitions":  {
     "child":  {
       "type":       "object",
-      "required":   ["name", "label", "type", "init", "restrict"],
+      "required":   ["name", "label", "type", "init", "comply"],
       "properties": {
         "name":       {"type": "string"},
         "label":      {"type": "string"},
         "type":       {"type": "string"},
         "init":       {"type": ["boolean", "number", "string", "array", "object", "null"]},
-        "restrict":   {
+        "comply":   {
           "type": "object",
           "required": ["rules"],
           "properties": {
