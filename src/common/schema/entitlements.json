@@ -2,12 +2,10 @@
   "$schema":    "http://json-schema.org/draft-04/schema#",
   "title":      "Grants.js common entitlements schema",
   "type":       "object",
-  "required":   ["name", "label", "type", "init", "children", "revision"],
+  "required":   ["name", "label", "children", "revision"],
   "properties":{
     "name":       {"$ref": "#/definitions/child/properties/name"},
     "label":      {"$ref": "#/definitions/child/properties/label"},
-    "type":       {"$ref": "#/definitions/child/properties/type"},
-    "init":       {"$ref": "#/definitions/child/properties/init"},
     "children":   {"$ref": "#/definitions/child/properties/children"},
     "revision":   {"type": "string"}
   },
@@ -29,10 +27,13 @@
               "items": {
                 "oneOf": [
                   {"type":"string"},
-                  {"type": "array", "items": [ {"type": "string"} ] }
+                  {
+                    "type": "array",
+                    "items": [ {"type": "string"} ],
+                    "additionalItems": true
+                  },
                 ]
-              },
-              "additionalItems": true
+              }
             },
             "define": {
               "type": "array",
