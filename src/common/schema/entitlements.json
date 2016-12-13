@@ -20,9 +20,9 @@
         "label":      {"type": "string"},
         "type":       {
           "type": "string",
-          "enum": ["boolean", "number", "string", "array", "object", "null"]
+          "enum": ["boolean", "number", "string", "enum", "range"]
         },
-        "init":   {"type": ["boolean", "number", "string", "array", "object", "null"]},
+        "init":   {"type": ["boolean", "number", "string", "array", "null"]},
         "comply":   {
           "type": "object",
           "required": ["rules"],
@@ -31,7 +31,9 @@
               "type": "array",
               "items": {
                 "oneOf": [
-                  {"type":"string"},
+                  {
+                    "type":"string"
+                  },
                   {
                     "type": "array",
                     "items": [ {"type": "string"} ],

@@ -30,6 +30,14 @@ const max = (value, maxValue, include = true) =>
 const int = value => Number.isSafeInteger(value);
 
 /**
+ * Checks whether the provided value has specified precision.
+ * @param  {Number} value The value to check.
+ * @param  {Number} prec  Number of digits after '.'
+ * @return {[type]}       true is the number of digits equals 'prec', false otherwise
+ */
+const precision = (value, prec) => (String(value).search(new RegExp(`^[0-9]+\.([0-9]{${prec}})$`)) >= 0);
+
+/**
  * Exported array holds objects describing built-in rules.
  * It helps validating schemas obtained from external APIs to comply with the provided rule checking API.
  * Each object in 'define' array has the following shape:
@@ -68,5 +76,12 @@ export default [
     args: [{ type: 'number', required: true }],
     fn: int,
     errorText: 'common.rules.number.int.errorText',
+  },
+  {
+    name: 'precision',
+    description: 'common.rules.number.precision.description',
+    args: [{ type: 'number', required: true }, { type: 'number', required: true }],
+    fn: precision,
+    errorText: 'common.rules.number.precision.errorText',
   },
 ];
