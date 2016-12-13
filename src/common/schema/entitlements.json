@@ -27,8 +27,12 @@
             "rules": {
               "type": "array",
               "items": {
-                "type": "string"
-              }
+                "oneOf": [
+                  {"type":"string"},
+                  {"type": "array", "items": [ {"type": "string"} ] }
+                ]
+              },
+              "additionalItems": true
             },
             "define": {
               "type": "array",
@@ -47,9 +51,7 @@
         },
         "children":   {
           "type":   "array",
-          "items":  {
-            "type": {"$ref": "#/definitions/child"}
-          }
+          "items":  {"$ref": "#/definitions/child"}
         }
       }
     }
