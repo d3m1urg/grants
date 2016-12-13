@@ -6,9 +6,11 @@
   "properties":{
     "name":       {"$ref": "#/definitions/child/properties/name"},
     "label":      {"$ref": "#/definitions/child/properties/label"},
+    "comply":     {"$ref": "#/definitions/child/properties/comply"},
     "children":   {"$ref": "#/definitions/child/properties/children"},
     "revision":   {"type": "string"}
   },
+  "additionalProperties": false,
   "definitions":  {
     "child":  {
       "type":       "object",
@@ -53,8 +55,9 @@
         "children":   {
           "type":   "array",
           "items":  {"$ref": "#/definitions/child"}
-        }
-      }
+        },
+      },
+      "additionalProperties": false
     }
   }
 }
