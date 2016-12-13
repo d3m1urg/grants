@@ -16,12 +16,15 @@
       "type":       "object",
       "required":   ["name", "label", "type", "init", "comply"],
       "properties": {
-        "name":       {"type": "string"},
+        "name":       {
+                        "type": "string",
+                        "pattern": "^[0-9A-Za-z\\.\\-_]+$"
+                      },
         "label":      {"type": "string"},
         "type":       {
-          "type": "string",
-          "enum": ["boolean", "number", "string", "enum", "range"]
-        },
+                        "type": "string",
+                        "enum": ["boolean", "number", "string", "enum", "range"]
+                      },
         "init":   {"type": ["boolean", "number", "string", "array", "null"]},
         "comply":   {
           "type": "object",
