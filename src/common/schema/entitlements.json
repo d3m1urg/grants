@@ -18,8 +18,11 @@
       "properties": {
         "name":       {"type": "string"},
         "label":      {"type": "string"},
-        "type":       {"type": "string"},
-        "init":       {"type": ["boolean", "number", "string", "array", "object", "null"]},
+        "type":       {
+          "type": "string",
+          "enum": ["boolean", "number", "string", "array", "object", "null"]
+        },
+        "init":   {"type": ["boolean", "number", "string", "array", "object", "null"]},
         "comply":   {
           "type": "object",
           "required": ["rules"],
@@ -41,13 +44,32 @@
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["name", "description", "fn", "errorText"],
+                "required": ["name", "description", "fn", "args", "errorText"],
                 "properties": {
                   "name": {"type": "string"},
                   "description": {"type": "string"},
                   "fn": {"type": "string"},
+                  "args": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["type", "required"],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["boolean", "number", "string", "array", "object", "null"]
+                        },
+                        "required": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "additionalItems": false
+                  },
                   "errorMessage": {"type": "string"}
-                }
+                },
+                "additionalProperties": false
               }
             }
           }
