@@ -52,6 +52,15 @@ const testSchema = `
             }
           }
         ]
+      },
+      {
+        "name": "ent2",
+        "label": "Simple entitlement 2",
+        "type": "number",
+        "init": 0,
+        "comply":{
+          "rules": ["number.int"]
+        }
       }
     ]
   }

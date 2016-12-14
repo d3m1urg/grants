@@ -8,6 +8,13 @@ import Immutable from 'immutable';
 
 const rulesDir = path.join(path.normalize(path.join(__dirname, '..')), 'rules');
 
+/**
+ * Rules in the rules list are parsed in the following manner:
+ * - if it has a '.' - then it is expected to be a predefined rule
+ * - if it has no '.' - it is expected to be user-defined rule. User-defined rules
+ * are searched throughout the tree from bottom to top (as variables in js scope)
+ * If no matching rule found an Error is thrown.
+ */
 class Compliance extends EventEmitter {
 
   constructor() {
@@ -67,7 +74,7 @@ class Compliance extends EventEmitter {
       } else {
         break;
       }
-      if (elem.comply.define.length > 0) {
+      if (elem.comply.define && elem.comply.define.length > 0) {
         elem.comply.define.forEach((rule) => {
           names.push(rule.name);
           const script = new vm.Script(rule.fn, {
