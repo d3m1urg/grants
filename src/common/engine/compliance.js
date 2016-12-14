@@ -20,7 +20,7 @@ const rulesKey = Object.create({
  * If no matching rule found an Error is thrown.
  * @todo Move rules dir to config file
  * @todo Resource schema should pass all rules with init values.
- * @todo  If script can not compile it throws error - that must not crash app.
+ * @todo If script can not compile it throws error - that must not crash app.
  */
 class Compliance extends EventEmitter {
 
@@ -94,14 +94,12 @@ class Compliance extends EventEmitter {
       if (elem.comply.define && elem.comply.define.length > 0) {
         elem.comply.define.forEach((rule) => {
           names.push(rule.name);
-          const script = new vm.Script(rule.fn, {
+          const fn = vm.runInNewContext(rule.fn, {}, {
             filename: names.join('.'),
             displayErrors: true,
             timeout: 100,
           });
-          const defRule = Object.assign({}, rule, {
-            fn: script,
-          });
+          const defRule = Object.assign({}, rule, { fn });
           this.rulesCache = this.rulesCache.setIn(names, defRule);
           names.pop();
         });
@@ -113,7 +111,17 @@ class Compliance extends EventEmitter {
     }
   }
 
-  verifyCompliance() {
+  execute
+
+  verifyEntryCompliance(path, value) {
+    if (!this.complyCache.hasIn(path)) {
+      throw new Error(`Path ${path.join('.')} not valid.}`);
+    }
+    const rules = this.complyCache.getIn(path).map(item => );
+
+  }
+
+  verifyEntitlements() {
 
   }
 
