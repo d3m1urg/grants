@@ -55,7 +55,7 @@ const precision = (value, prec) => (String(value).search(new RegExp(`^[0-9]+\.([
  *   }
  * @type {Array}
  */
-export default [
+export const rules = [
   {
     name: 'min',
     description: 'common.rules.number.min.description',
@@ -85,3 +85,9 @@ export default [
     errorText: 'common.rules.number.precision.errorText',
   },
 ];
+
+/**
+ * Module name used for dynamic loading.
+ * @type {String}
+ */
+export const module = 'number';
