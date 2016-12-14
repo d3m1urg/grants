@@ -21,7 +21,7 @@ const testSchema = `
         "type": "number",
         "init": 0,
         "comply":{
-          "rules": ["entRule"],
+          "rules": ["entRule", "extRule"],
           "define": [
             {
               "name": "entRule",
@@ -29,6 +29,13 @@ const testSchema = `
               "fn": "function e(value) { return value > 0; }",
               "args": [{ "type": "number", "required": true }],
               "errorText": "Ent must be greater than 0"
+            },
+            {
+              "name": "extRule",
+              "description": "Next defined rule",
+              "fn": "function e(value) { return value < 100; }",
+              "args": [{ "type": "number", "required": true }],
+              "errorText": "Ent must be less than 100"
             }
           ]
         },
@@ -91,9 +98,14 @@ describe('Compliance', () => {
       const schema = JSON.parse(testSchema);
       compliance.loadExternalRules(schema);
       cache = compliance.rulesCache.toJS();
-      console.log(util.inspect(cache, {depth: null}));
+      const comply = compliance.complyCache.toJS();
+      // console.log(util.inspect(comply, { depth: null }));
       expect(cache).to.have.deep.property('entResource.ent.entRule');
+      expect(cache).to.have.deep.property('entResource.ent.extRule');
       expect(cache).to.have.deep.property('entResource.ent.internalEnt.trueRule');
+      expect(comply).to.have.deep.property('entResource.ent.@testKey@');
+      expect(comply).to.have.deep.property('entResource.ent.internalEnt.@testKey@');
+      expect(comply).to.have.deep.property('entResource.ent2.@testKey@');
     });
   });
 });

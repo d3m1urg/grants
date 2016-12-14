@@ -8,18 +8,26 @@ import Immutable from 'immutable';
 
 const rulesDir = path.join(path.normalize(path.join(__dirname, '..')), 'rules');
 
+const rulesKey = Object.create({
+  toString: () => '@testKey@',
+});
+
 /**
  * Rules in the rules list are parsed in the following manner:
  * - if it has a '.' - then it is expected to be a predefined rule
  * - if it has no '.' - it is expected to be user-defined rule. User-defined rules
  * are searched throughout the tree from bottom to top (as variables in js scope)
  * If no matching rule found an Error is thrown.
+ * @todo Move rules dir to config file
+ * @todo Resource schema should pass all rules with init values.
+ * @todo  If script can not compile it throws error - that must not crash app.
  */
 class Compliance extends EventEmitter {
 
   constructor() {
     super();
     this.rulesCache = Immutable.Map({});
+    this.complyCache = Immutable.Map({});
   }
 
   loadPredefinedRules() {
@@ -65,6 +73,9 @@ class Compliance extends EventEmitter {
     let elem;
     while (true) {
       if (curr.length > 0) {
+        if (names.length !== 1 && stack.length === 0) {
+          names.pop();
+        }
         elem = curr.shift();
         names.push(elem.name);
       } else if (stack.length > 0) {
@@ -73,6 +84,12 @@ class Compliance extends EventEmitter {
         continue;
       } else {
         break;
+      }
+      if (elem.comply.rules.length > 0) {
+        if (!this.complyCache.hasIn(names)) {
+          this.complyCache = this.complyCache.setIn(names, Immutable.Map({}));
+        }
+        this.complyCache = this.complyCache.setIn([...names, rulesKey], elem.comply.rules);
       }
       if (elem.comply.define && elem.comply.define.length > 0) {
         elem.comply.define.forEach((rule) => {
@@ -94,6 +111,10 @@ class Compliance extends EventEmitter {
         curr = elem.children;
       }
     }
+  }
+
+  verifyCompliance() {
+
   }
 
 }
