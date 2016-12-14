@@ -111,13 +111,33 @@ class Compliance extends EventEmitter {
     }
   }
 
-  execute
+  findRule(path, rule) {
+    for(let i = path.length - 1; i >= 0; i--) {
+      const rules = this.complyCache.getIn([...path, rulesKey]);
+      if (rules.some(item => Array.isArray(item) ? item[0] === rule : item === rule)) {
+        return path.slice(0, )
+      }
+    }
+  }
 
   verifyEntryCompliance(path, value) {
     if (!this.complyCache.hasIn(path)) {
       throw new Error(`Path ${path.join('.')} not valid.}`);
     }
-    const rules = this.complyCache.getIn(path).map(item => );
+    const rules = this.complyCache.getIn(path).map(item => {
+      let rulePath = [];
+      let ruleName = item;
+      let args = [];
+      if (Array.isArray(item)) {
+        ruleName = item[0];
+        args = item.slice(1);
+      }
+      if (item.indexOf('.') > 0) {
+        rulePath = item.split('.');
+      } else {
+        rulePath = this.findRule([...path], ruleName);
+      }
+    });
 
   }
 
