@@ -26,14 +26,14 @@ const testSchema = `
             {
               "name": "entRule",
               "description": "Sample defined rule",
-              "fn": "function e(value) { return value > 0; }",
+              "fn": "value => value >= 0",
               "args": [{ "type": "number", "required": true }],
               "errorText": "Ent must be greater than 0"
             },
             {
               "name": "extRule",
               "description": "Next defined rule",
-              "fn": "function e(value) { return value < 100; }",
+              "fn": "value => value < 100",
               "args": [{ "type": "number", "required": true }],
               "errorText": "Ent must be less than 100"
             }
@@ -43,17 +43,17 @@ const testSchema = `
           {
             "name": "internalEnt",
             "label": "Simple internal entitlement",
-            "type": "boolean",
-            "init": false,
+            "type": "number",
+            "init": 10,
             "comply":{
-              "rules": ["trueRule"],
+              "rules": ["trueRule", "entRule", "extRule"],
               "define": [
                 {
                   "name": "trueRule",
                   "description": "Sample internal rule",
-                  "fn": "function e(value) { return value === true; }",
-                  "args": [{ "type": "boolean", "required": true }],
-                  "errorText": "Ent must be true"
+                  "fn": "value => value >= 10",
+                  "args": [{ "type": "number", "required": true }],
+                  "errorText": "Ent must be greater or equal to 10"
                 }
               ]
             }
@@ -64,9 +64,9 @@ const testSchema = `
         "name": "ent2",
         "label": "Simple entitlement 2",
         "type": "number",
-        "init": 0,
+        "init": 10,
         "comply":{
-          "rules": ["number.int"]
+          "rules": ["number.int", ["number.min", 5, false]]
         }
       }
     ]
@@ -100,12 +100,19 @@ describe('Compliance', () => {
       cache = compliance.rulesCache.toJS();
       const comply = compliance.complyCache.toJS();
       // console.log(util.inspect(comply, { depth: null }));
+      // console.log(util.inspect(cache, { depth: null }));
       expect(cache).to.have.deep.property('entResource.ent.entRule');
       expect(cache).to.have.deep.property('entResource.ent.extRule');
       expect(cache).to.have.deep.property('entResource.ent.internalEnt.trueRule');
       expect(comply).to.have.deep.property('entResource.ent.@testKey@');
       expect(comply).to.have.deep.property('entResource.ent.internalEnt.@testKey@');
       expect(comply).to.have.deep.property('entResource.ent2.@testKey@');
+      expect(compliance.findRule(['entResource', 'ent', 'internalEnt'], 'entRule')).to.eql(['entResource', 'ent']);
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent'], 7)).to.be.true;
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent', 'internalEnt'], 11)).to.be.true;
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent', 'internalEnt'], 9)).to.be.false;
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent2'], 5)).to.be.false;
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent2'], 6)).to.be.true;
     });
   });
 });

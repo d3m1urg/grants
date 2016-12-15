@@ -111,37 +111,44 @@ class Compliance extends EventEmitter {
     }
   }
 
-  findRule(path, rule) {
-    for(let i = path.length - 1; i >= 0; i--) {
-      const rules = this.complyCache.getIn([...path, rulesKey]);
-      if (rules.some(item => Array.isArray(item) ? item[0] === rule : item === rule)) {
-        return path.slice(0, )
+  findRule(rulePath, rule) {
+    for (let i = rulePath.length; i >= 0; i--) {
+      if (this.rulesCache.hasIn([...rulePath.slice(0, i), rule])) {
+        return rulePath.slice(0, i);
       }
     }
+    return null;
   }
 
-  verifyEntryCompliance(path, value) {
-    if (!this.complyCache.hasIn(path)) {
-      throw new Error(`Path ${path.join('.')} not valid.}`);
+  verifyEntryCompliance(rpath, value) {
+    if (!this.complyCache.hasIn(rpath)) {
+      throw new Error(`Path ${rpath.join('.')} not valid.}`);
     }
-    const rules = this.complyCache.getIn(path).map(item => {
+    const rules = this.complyCache.getIn([...rpath, rulesKey]).map((item) => {
       let rulePath = [];
       let ruleName = item;
       let args = [];
+      let resolvedRule = null;
       if (Array.isArray(item)) {
         ruleName = item[0];
         args = item.slice(1);
       }
-      if (item.indexOf('.') > 0) {
-        rulePath = item.split('.');
+      if (ruleName.indexOf('.') > 0) {
+        rulePath = ruleName.split('.');
+        resolvedRule = this.rulesCache.getIn([...rulePath]).fn;
       } else {
-        rulePath = this.findRule([...path], ruleName);
+        rulePath = this.findRule([...rpath], ruleName);
+        resolvedRule = this.rulesCache.getIn([...rulePath, ruleName]).fn;
       }
+      return [resolvedRule, args];
     });
-
+    return rules.every((rl) => {
+      const [ruleFn, args] = rl;
+      return ruleFn(value, ...args);
+    });
   }
 
-  verifyEntitlements() {
+  verifyEntitlements(rules, value) {
 
   }
 
