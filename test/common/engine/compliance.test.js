@@ -14,6 +14,18 @@ const testSchema = `
     "name": "entResource",
     "label": "Sample resource schema",
     "revision": "0.0.1",
+    "comply": {
+      "rules": ["integrity"],
+      "define": [
+        {
+          "name": "integrity",
+          "description": "Sample top-level rule",
+          "fn": "value => value.ent.internalEnt >= 50 && value.ent2 <= 10",
+          "args": [{ "type": "object", "required": true }],
+          "errorText": "Entitlements graph incorrect"
+        }
+      ]
+    },
     "children": [
       {
         "name": "ent",
@@ -130,7 +142,7 @@ describe('Compliance', () => {
     it('should check whether values comply with rules set', () => {
       expect(compliance.verifyEntitlementsCompliance(sampleGoodEntitlements, 'entResource').size).to.equal(0);
       expect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource').size).to.equal(2);
-      console.log(util.inspect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource'), {depth: null}));
+      // console.log(util.inspect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource'), {depth: null}));
     });
   });
 });

@@ -66,6 +66,30 @@ class Compliance extends EventEmitter {
     });
   }
 
+  loadExternalRootRules(schema) {
+    if (!schema.comply) {
+      return;
+    }
+    const names = [schema.name];
+    if (!this.complyCache.hasIn(names)) {
+      this.complyCache = this.complyCache.setIn(names, Immutable.Map({}));
+    }
+    this.complyCache = this.complyCache.setIn([...names, rulesKey], schema.comply.rules);
+    if (schema.comply.define && schema.comply.define.length > 0) {
+      schema.comply.define.forEach((rule) => {
+        names.push(rule.name);
+        const fn = vm.runInNewContext(rule.fn, {}, {
+          filename: names.join('.'),
+          displayErrors: true,
+          timeout: 100,
+        });
+        const defRule = Object.assign({}, rule, { fn });
+        this.rulesCache = this.rulesCache.setIn(names, defRule);
+        names.pop();
+      });
+    }
+  }
+
   loadExternalRules(schema) {
     let curr = schema.children;
     const stack = [];
@@ -120,7 +144,7 @@ class Compliance extends EventEmitter {
 
   verifyEntryCompliance(rpath, value) {
     if (!this.complyCache.hasIn(rpath)) {
-      throw new Error(`Path ${rpath.join('.')} not valid.}`);
+      return new Set();
     }
     const rules = this.complyCache.getIn([...rpath, rulesKey]).map((item) => {
       let rulePath = [];
@@ -148,6 +172,13 @@ class Compliance extends EventEmitter {
       }
     });
     return errors;
+  }
+
+  verifyRootCompliance(entitlements, resource) {
+    if (!this.complyCache.hasIn([resource, rulesKey])) {
+      return new Set();
+    }
+    return this.verifyEntryCompliance([resource], entitlements);
   }
 
   verifyEntitlementsCompliance(entitlements, resource) {
