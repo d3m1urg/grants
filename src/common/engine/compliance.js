@@ -133,17 +133,21 @@ class Compliance extends EventEmitter {
       }
       if (ruleName.indexOf('.') > 0) {
         rulePath = ruleName.split('.');
-        resolvedRule = this.rulesCache.getIn([...rulePath]).fn;
+        resolvedRule = this.rulesCache.getIn([...rulePath]);
       } else {
         rulePath = this.findRule([...rpath], ruleName);
-        resolvedRule = this.rulesCache.getIn([...rulePath, ruleName]).fn;
+        resolvedRule = this.rulesCache.getIn([...rulePath, ruleName]);
       }
-      return [resolvedRule, args];
+      return [resolvedRule, rulePath, args];
     });
-    return rules.every((rl) => {
-      const [ruleFn, args] = rl;
-      return ruleFn(value, ...args);
+    const errors = new Set();
+    rules.forEach((rl) => {
+      const [ruleObj, rulePath, args] = rl;
+      if (!ruleObj.fn(value, ...args)) {
+        errors.add([rulePath, value, ruleObj]);
+      }
     });
+    return errors;
   }
 
   verifyEntitlementsCompliance(entitlements, resource) {
@@ -154,7 +158,7 @@ class Compliance extends EventEmitter {
     let key = null;
     let value = null;
     const names = [resource];
-    const incorrectValues = new Map();
+    const incorrectValues = new Set();
     while (true) {
       if (currentKeys.length > 0) {
         key = currentKeys.shift();
@@ -174,8 +178,9 @@ class Compliance extends EventEmitter {
         currentKeys = Object.keys(value);
         currentObj = value;
       } else {
-        if (!this.verifyEntryCompliance(names, value)) {
-          incorrectValues.set(key, value);
+        const errors = this.verifyEntryCompliance(names, value);
+        if (errors.size > 0) {
+          incorrectValues.add([[...names], errors]);
         }
         names.pop();
       }

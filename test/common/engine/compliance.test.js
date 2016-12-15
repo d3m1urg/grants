@@ -121,16 +121,16 @@ describe('Compliance', () => {
       expect(comply).to.have.deep.property('entResource.ent.internalEnt.@testKey@');
       expect(comply).to.have.deep.property('entResource.ent2.@testKey@');
       expect(compliance.findRule(['entResource', 'ent', 'internalEnt'], 'entRule')).to.eql(['entResource', 'ent']);
-      expect(compliance.verifyEntryCompliance(['entResource', 'ent'], 7)).to.be.true;
-      expect(compliance.verifyEntryCompliance(['entResource', 'ent', 'internalEnt'], 11)).to.be.true;
-      expect(compliance.verifyEntryCompliance(['entResource', 'ent', 'internalEnt'], 9)).to.be.false;
-      expect(compliance.verifyEntryCompliance(['entResource', 'ent2'], 5)).to.be.false;
-      expect(compliance.verifyEntryCompliance(['entResource', 'ent2'], 6)).to.be.true;
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent'], 7).size).to.equal(0);
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent', 'internalEnt'], 11).size).to.equal(0);
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent', 'internalEnt'], 9).size).to.equal(1);
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent2'], 5).size).to.equal(1);
+      expect(compliance.verifyEntryCompliance(['entResource', 'ent2'], 6).size).to.equal(0);
     });
     it('should check whether values comply with rules set', () => {
       expect(compliance.verifyEntitlementsCompliance(sampleGoodEntitlements, 'entResource').size).to.equal(0);
       expect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource').size).to.equal(2);
-      console.log(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource'));
+      console.log(util.inspect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource'), {depth: null}));
     });
   });
 });
