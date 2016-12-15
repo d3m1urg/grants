@@ -85,12 +85,10 @@ class Compliance extends EventEmitter {
       } else {
         break;
       }
-      if (elem.comply.rules.length > 0) {
-        if (!this.complyCache.hasIn(names)) {
-          this.complyCache = this.complyCache.setIn(names, Immutable.Map({}));
-        }
-        this.complyCache = this.complyCache.setIn([...names, rulesKey], elem.comply.rules);
+      if (!this.complyCache.hasIn(names)) {
+        this.complyCache = this.complyCache.setIn(names, Immutable.Map({}));
       }
+      this.complyCache = this.complyCache.setIn([...names, rulesKey], elem.comply.rules);
       if (elem.comply.define && elem.comply.define.length > 0) {
         elem.comply.define.forEach((rule) => {
           names.push(rule.name);
@@ -148,8 +146,41 @@ class Compliance extends EventEmitter {
     });
   }
 
-  verifyEntitlements(rules, value) {
-
+  verifyEntitlementsCompliance(entitlements, resource) {
+    const keysStack = [];
+    const objStack = [];
+    let currentKeys = Object.keys(entitlements);
+    let currentObj = entitlements;
+    let key = null;
+    let value = null;
+    const names = [resource];
+    const incorrectValues = new Map();
+    while (true) {
+      if (currentKeys.length > 0) {
+        key = currentKeys.shift();
+        value = currentObj[key];
+        names.push(key);
+      } else if (objStack.length > 0) {
+        currentObj = objStack.pop();
+        currentKeys = keysStack.pop();
+        names.pop();
+        continue;
+      } else {
+        break;
+      }
+      if (typeof value === 'object' && !(value instanceof Array)) {
+        keysStack.push(currentKeys);
+        objStack.push(currentObj);
+        currentKeys = Object.keys(value);
+        currentObj = value;
+      } else {
+        if (!this.verifyEntryCompliance(names, value)) {
+          incorrectValues.set(key, value);
+        }
+        names.pop();
+      }
+    }
+    return incorrectValues;
   }
 
 }

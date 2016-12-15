@@ -18,10 +18,9 @@ const testSchema = `
       {
         "name": "ent",
         "label": "Simple entitlement",
-        "type": "number",
-        "init": 0,
+        "type": "object",
         "comply":{
-          "rules": ["entRule", "extRule"],
+          "rules": [],
           "define": [
             {
               "name": "entRule",
@@ -73,6 +72,20 @@ const testSchema = `
   }
 `;
 
+const sampleGoodEntitlements = {
+  ent: {
+    internalEnt: 50,
+  },
+  ent2: 7,
+};
+
+const sampleBadEntitlements = {
+  ent: {
+    internalEnt: 9,
+  },
+  ent2: 5,
+};
+
 let cache;
 
 describe('Compliance', () => {
@@ -104,7 +117,7 @@ describe('Compliance', () => {
       expect(cache).to.have.deep.property('entResource.ent.entRule');
       expect(cache).to.have.deep.property('entResource.ent.extRule');
       expect(cache).to.have.deep.property('entResource.ent.internalEnt.trueRule');
-      expect(comply).to.have.deep.property('entResource.ent.@testKey@');
+      // expect(comply).to.have.deep.property('entResource.ent.@testKey@');
       expect(comply).to.have.deep.property('entResource.ent.internalEnt.@testKey@');
       expect(comply).to.have.deep.property('entResource.ent2.@testKey@');
       expect(compliance.findRule(['entResource', 'ent', 'internalEnt'], 'entRule')).to.eql(['entResource', 'ent']);
@@ -113,6 +126,11 @@ describe('Compliance', () => {
       expect(compliance.verifyEntryCompliance(['entResource', 'ent', 'internalEnt'], 9)).to.be.false;
       expect(compliance.verifyEntryCompliance(['entResource', 'ent2'], 5)).to.be.false;
       expect(compliance.verifyEntryCompliance(['entResource', 'ent2'], 6)).to.be.true;
+    });
+    it('should check whether values comply with rules set', () => {
+      expect(compliance.verifyEntitlementsCompliance(sampleGoodEntitlements, 'entResource').size).to.equal(0);
+      expect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource').size).to.equal(2);
+      console.log(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource'));
     });
   });
 });
