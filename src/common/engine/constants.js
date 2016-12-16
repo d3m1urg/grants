@@ -30,4 +30,7 @@ export const ERROR = {
   RULE: {
     COMPILE: 'ERROR_RULE_COMPILE',
   },
+  SCHEMA: {
+    VERIFY: 'ERROR_SCHEMA_VERIFY',
+  }
 };

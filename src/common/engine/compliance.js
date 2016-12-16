@@ -11,7 +11,7 @@ import Immutable from 'immutable';
 
 import { ERROR } from './constants';
 
-const { RULE: { COMPILE } } = ERROR;
+const { RULE: { COMPILE }, SCHEMA: { VERIFY } } = ERROR;
 
 const rulesDir = path.join(path.normalize(path.join(__dirname, '..')), 'rules');
 
@@ -256,7 +256,7 @@ class Compliance extends EventEmitter {
     return incorrectValues;
   }
 
-  verifySchemaCompliance(schema, entitlements, resource) {
+  verifySchemaCompliance(schema, entitlements) {
     const context = {
       rulesCache: this.builtInRules,
       complyCache: Immutable.Map({}),
@@ -267,10 +267,15 @@ class Compliance extends EventEmitter {
       this.loadExternalRootRules.call(context, schema);
       this.loadExternalRules.call(context, schema);
     } catch (err) {
-      return [new VError(err, 'Failed to load schema "%s"', schema.name), null, null];
+      return [new VError({
+        name: VERIFY,
+        cause: err,
+        strict: true,
+        info: { schema },
+      }, 'Failed to load schema "%s"', schema.name), null, null];
     }
-    const rootErrs = this.verifyRootCompliance.call(context, entitlements, resource);
-    const entErrs = this.verifyEntitlementsCompliance.call(context, entitlements, resource);
+    const rootErrs = this.verifyRootCompliance.call(context, entitlements, schema.name);
+    const entErrs = this.verifyEntitlementsCompliance.call(context, entitlements, schema.name);
     return [null, rootErrs, entErrs];
   }
 
