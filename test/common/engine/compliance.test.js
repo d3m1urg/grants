@@ -157,8 +157,8 @@ describe('Compliance', () => {
       // console.log(util.inspect(entErrs));
       expect(rootErrs.size).to.equal(0);
       expect(entErrs.size).to.equal(0);
-      console.log(util.inspect(compliance.complyCache.toJS(), { depth: null }))
-      console.log(util.inspect(compliance.rulesCache.toJS(), { depth: null }))
+      // console.log(util.inspect(compliance.complyCache.toJS(), { depth: null }))
+      // console.log(util.inspect(compliance.rulesCache.toJS(), { depth: null }))
     });
   });
 });

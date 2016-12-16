@@ -94,7 +94,7 @@ class Compliance extends EventEmitter {
   }
 
   loadExternalRules(schema) {
-    let curr = schema.children;
+    let curr = [...schema.children];
     const stack = [];
     const names = [schema.name];
     let elem;
@@ -131,7 +131,7 @@ class Compliance extends EventEmitter {
       }
       if (elem.children && elem.children.length > 0) {
         stack.push(curr);
-        curr = elem.children;
+        curr = [...elem.children];
       }
     }
   }
