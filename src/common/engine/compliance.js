@@ -1,7 +1,10 @@
+/* eslint-disable no-constant-condition, no-continue,
+global-require, import/no-dynamic-require, no-plusplus */
 import { waterfall, map } from 'async';
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
+import VError from 'verror';
 
 import EventEmitter from 'eventemitter3';
 import Immutable from 'immutable';
@@ -42,7 +45,8 @@ class Compliance extends EventEmitter {
           map(filePaths, fs.stat, (err, stats) => callback(err, stats, filePaths));
         },
         (stats, files, callback) => {
-          const filesToProcess = stats.map((stat, index) => stat.isFile() && files[index]).filter(item => item);
+          const filesToProcess = stats.map((stat, index) => stat.isFile() &&
+            files[index]).filter(item => item);
           callback(null, filesToProcess);
         },
         (filesToProcess, callback) => {
@@ -71,8 +75,9 @@ class Compliance extends EventEmitter {
 
   loadExternalRootRules(schema) {
     if (!schema.comply) {
-      return;
+      return new Set();
     }
+    const errors = new Set();
     const names = [schema.name];
     if (!this.complyCache.hasIn(names)) {
       this.complyCache = this.complyCache.setIn(names, Immutable.Map({}));
@@ -80,20 +85,26 @@ class Compliance extends EventEmitter {
     this.complyCache = this.complyCache.setIn([...names, rulesKey], schema.comply.rules);
     if (schema.comply.define && schema.comply.define.length > 0) {
       schema.comply.define.forEach((rule) => {
-        names.push(rule.name);
-        const fn = vm.runInNewContext(rule.fn, {}, {
-          filename: names.join('.'),
-          displayErrors: true,
-          timeout: 100,
-        });
-        const defRule = Object.assign({}, rule, { fn });
-        this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
-        names.pop();
+        try {
+          names.push(rule.name);
+          const fn = vm.runInNewContext(rule.fn, {}, {
+            filename: names.join('.'),
+            displayErrors: true,
+            timeout: 100,
+          });
+          const defRule = Object.assign({}, rule, { fn });
+          this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
+          names.pop();
+        } catch (e) {
+          errors.add(new VError(e, 'Failed to compile %s rule at %s root', rule.name, schema.name));
+        }
       });
     }
+    return errors;
   }
 
   loadExternalRules(schema) {
+    const errors = new Set();
     let curr = [...schema.children];
     const stack = [];
     const names = [schema.name];
@@ -118,15 +129,19 @@ class Compliance extends EventEmitter {
       this.complyCache = this.complyCache.setIn([...names, rulesKey], elem.comply.rules);
       if (elem.comply.define && elem.comply.define.length > 0) {
         elem.comply.define.forEach((rule) => {
-          names.push(rule.name);
-          const fn = vm.runInNewContext(rule.fn, {}, {
-            filename: names.join('.'),
-            displayErrors: true,
-            timeout: 100,
-          });
-          const defRule = Object.assign({}, rule, { fn });
-          this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
-          names.pop();
+          try {
+            names.push(rule.name);
+            const fn = vm.runInNewContext(rule.fn, {}, {
+              filename: names.join('.'),
+              displayErrors: true,
+              timeout: 100,
+            });
+            const defRule = Object.assign({}, rule, { fn });
+            this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
+            names.pop();
+          } catch (e) {
+            errors.add(new VError(e, 'Failed to compile %s rule at %s', rule.name, names.join('.')));
+          }
         });
       }
       if (elem.children && elem.children.length > 0) {
@@ -134,6 +149,7 @@ class Compliance extends EventEmitter {
         curr = [...elem.children];
       }
     }
+    return errors;
   }
 
   findRule(rulePath, rule) {
