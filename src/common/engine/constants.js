@@ -26,11 +26,23 @@ export const COMPILER = {
   },
 };
 
-export const ERROR = {
-  RULE: {
-    COMPILE: 'ERROR_RULE_COMPILE',
+export const COMPLIANCE = {
+  ERROR: {
+    RULE: {
+      COMPILE: 'ERROR_RULE_COMPILE',
+    },
+    SCHEMA: {
+      VERIFY: 'ERROR_SCHEMA_VERIFY',
+      LOAD: 'ERROR_SCHEMA_LOAD',
+    },
+    ENTITLE: {
+      VERIFY: 'ERROR_ENTITLE_VERIFY',
+    },
   },
-  SCHEMA: {
-    VERIFY: 'ERROR_SCHEMA_VERIFY',
-  }
+  EVENT: {
+    LOAD: 'COMPLIANCE_EVENT_LOAD',
+    VERIFY: 'COMPLIANCE_EVENT_VERIFY',
+    COMPLY: 'COMPLIANCE_EVENT_COMPLY',
+    VERIFIED: 'COMPLIANCE_EVENT_VERIFIED',
+  },
 };
