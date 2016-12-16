@@ -28,6 +28,7 @@ class Compliance extends EventEmitter {
     super();
     this.rulesCache = Immutable.Map({});
     this.complyCache = Immutable.Map({});
+    this.builtInRules = null;
   }
 
   loadPredefinedRules() {
@@ -49,15 +50,17 @@ class Compliance extends EventEmitter {
             try {
               const { rules, module } = require(fileName);
               rules.forEach((rule) => {
-                this.rulesCache = this.rulesCache.setIn([module, rule.name], rule);
+                this.rulesCache = this.rulesCache.setIn([module, rule.name, rulesKey], rule);
               });
             } catch (e) {
               callback(e);
             }
           });
+          callback(null);
         },
       ], (err) => {
         if (!err) {
+          this.builtInRules = this.rulesCache;
           resolve();
         } else {
           reject(err);
@@ -84,7 +87,7 @@ class Compliance extends EventEmitter {
           timeout: 100,
         });
         const defRule = Object.assign({}, rule, { fn });
-        this.rulesCache = this.rulesCache.setIn(names, defRule);
+        this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
         names.pop();
       });
     }
@@ -122,7 +125,7 @@ class Compliance extends EventEmitter {
             timeout: 100,
           });
           const defRule = Object.assign({}, rule, { fn });
-          this.rulesCache = this.rulesCache.setIn(names, defRule);
+          this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
           names.pop();
         });
       }
@@ -157,10 +160,10 @@ class Compliance extends EventEmitter {
       }
       if (ruleName.indexOf('.') > 0) {
         rulePath = ruleName.split('.');
-        resolvedRule = this.rulesCache.getIn([...rulePath]);
+        resolvedRule = this.rulesCache.getIn([...rulePath, rulesKey]);
       } else {
         rulePath = this.findRule([...rpath], ruleName);
-        resolvedRule = this.rulesCache.getIn([...rulePath, ruleName]);
+        resolvedRule = this.rulesCache.getIn([...rulePath, ruleName, rulesKey]);
       }
       return [resolvedRule, rulePath, args];
     });
@@ -217,6 +220,20 @@ class Compliance extends EventEmitter {
       }
     }
     return incorrectValues;
+  }
+
+  verifySchemaCompliance(schema, entitlements, resource) {
+    const context = {
+      rulesCache: this.builtInRules,
+      complyCache: Immutable.Map({}),
+      findRule: this.findRule,
+      verifyEntryCompliance: this.verifyEntryCompliance,
+    };
+    this.loadExternalRootRules.call(context, schema);
+    this.loadExternalRules.call(context, schema);
+    const rootErrs = this.verifyRootCompliance.call(context, entitlements, resource);
+    const entErrs = this.verifyEntitlementsCompliance.call(context, entitlements, resource);
+    return [rootErrs, entErrs];
   }
 
 }

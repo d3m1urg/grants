@@ -20,7 +20,7 @@ const testSchema = `
         {
           "name": "integrity",
           "description": "Sample top-level rule",
-          "fn": "value => value.ent.internalEnt >= 50 && value.ent2 <= 10",
+          "fn": "value => value.ent.internalEnt >= 10 && value.ent2 <= 10",
           "args": [{ "type": "object", "required": true }],
           "errorText": "Entitlements graph incorrect"
         }
@@ -42,7 +42,7 @@ const testSchema = `
               "errorText": "Ent must be greater than 0"
             },
             {
-              "name": "extRule",
+              "name": "internalEnt",
               "description": "Next defined rule",
               "fn": "value => value < 100",
               "args": [{ "type": "number", "required": true }],
@@ -57,7 +57,7 @@ const testSchema = `
             "type": "number",
             "init": 10,
             "comply":{
-              "rules": ["trueRule", "entRule", "extRule"],
+              "rules": ["trueRule", "entRule", "internalEnt"],
               "define": [
                 {
                   "name": "trueRule",
@@ -84,6 +84,13 @@ const testSchema = `
   }
 `;
 
+const sampleInitEntitlements = {
+  ent: {
+    internalEnt: 10,
+  },
+  ent2: 10,
+};
+
 const sampleGoodEntitlements = {
   ent: {
     internalEnt: 50,
@@ -100,11 +107,12 @@ const sampleBadEntitlements = {
 
 let cache;
 
+const schema = JSON.parse(testSchema);
+const schemaExt = JSON.parse(testSchema);
+
 describe('Compliance', () => {
   describe('#loadPredefinedRules', () => {
-    it('should dynamicly load predefined rules', () => {
-      expect(compliance.loadPredefinedRules()).to.eventually.be.fulfilled;
-    });
+    it('should dynamicly load predefined rules', () => expect(compliance.loadPredefinedRules()).to.eventually.be.fulfilled);
   });
   describe('#rulesCache', () => {
     it('should contain correct rules', () => {
@@ -120,14 +128,13 @@ describe('Compliance', () => {
   });
   describe('#definedRules', () => {
     it('should correctly load user defined rules', () => {
-      const schema = JSON.parse(testSchema);
       compliance.loadExternalRules(schema);
       cache = compliance.rulesCache.toJS();
       const comply = compliance.complyCache.toJS();
       // console.log(util.inspect(comply, { depth: null }));
       // console.log(util.inspect(cache, { depth: null }));
       expect(cache).to.have.deep.property('entResource.ent.entRule');
-      expect(cache).to.have.deep.property('entResource.ent.extRule');
+      expect(cache).to.have.deep.property('entResource.ent.internalEnt');
       expect(cache).to.have.deep.property('entResource.ent.internalEnt.trueRule');
       // expect(comply).to.have.deep.property('entResource.ent.@testKey@');
       expect(comply).to.have.deep.property('entResource.ent.internalEnt.@testKey@');
@@ -143,6 +150,15 @@ describe('Compliance', () => {
       expect(compliance.verifyEntitlementsCompliance(sampleGoodEntitlements, 'entResource').size).to.equal(0);
       expect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource').size).to.equal(2);
       // console.log(util.inspect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource'), {depth: null}));
+    });
+    it('should run checks and validations in a separate context', () => {
+      const [rootErrs, entErrs] = compliance.verifySchemaCompliance(schemaExt, sampleInitEntitlements, 'entResource');
+      // console.log(util.inspect(rootErrs));
+      // console.log(util.inspect(entErrs));
+      expect(rootErrs.size).to.equal(0);
+      expect(entErrs.size).to.equal(0);
+      console.log(util.inspect(compliance.complyCache.toJS(), { depth: null }))
+      console.log(util.inspect(compliance.rulesCache.toJS(), { depth: null }))
     });
   });
 });
