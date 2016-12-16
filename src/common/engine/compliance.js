@@ -22,8 +22,6 @@ const rulesKey = Object.create({
  * are searched throughout the tree from bottom to top (as variables in js scope)
  * If no matching rule found an Error is thrown.
  * @todo Move rules dir to config file
- * @todo Resource schema should pass all rules with init values.
- * @todo If script can not compile it throws error - that must not crash app.
  */
 class Compliance extends EventEmitter {
 
@@ -75,9 +73,8 @@ class Compliance extends EventEmitter {
 
   loadExternalRootRules(schema) {
     if (!schema.comply) {
-      return new Set();
+      return;
     }
-    const errors = new Set();
     const names = [schema.name];
     if (!this.complyCache.hasIn(names)) {
       this.complyCache = this.complyCache.setIn(names, Immutable.Map({}));
@@ -96,15 +93,13 @@ class Compliance extends EventEmitter {
           this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
           names.pop();
         } catch (e) {
-          errors.add(new VError(e, 'Failed to compile %s rule at %s root', rule.name, schema.name));
+          throw new VError(e, 'Failed to compile "%s" rule at "%s" root', rule.name, schema.name);
         }
       });
     }
-    return errors;
   }
 
   loadExternalRules(schema) {
-    const errors = new Set();
     let curr = [...schema.children];
     const stack = [];
     const names = [schema.name];
@@ -140,7 +135,7 @@ class Compliance extends EventEmitter {
             this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
             names.pop();
           } catch (e) {
-            errors.add(new VError(e, 'Failed to compile %s rule at %s', rule.name, names.join('.')));
+            throw new VError(e, 'Failed to compile "%s" rule at "%s"', rule.name, names.join('.'));
           }
         });
       }
@@ -149,7 +144,6 @@ class Compliance extends EventEmitter {
         curr = [...elem.children];
       }
     }
-    return errors;
   }
 
   findRule(rulePath, rule) {
@@ -245,11 +239,15 @@ class Compliance extends EventEmitter {
       findRule: this.findRule,
       verifyEntryCompliance: this.verifyEntryCompliance,
     };
-    this.loadExternalRootRules.call(context, schema);
-    this.loadExternalRules.call(context, schema);
+    try {
+      this.loadExternalRootRules.call(context, schema);
+      this.loadExternalRules.call(context, schema);
+    } catch (err) {
+      return [new VError(err, 'Failed to load schema "%s"', schema.name), null, null];
+    }
     const rootErrs = this.verifyRootCompliance.call(context, entitlements, resource);
     const entErrs = this.verifyEntitlementsCompliance.call(context, entitlements, resource);
-    return [rootErrs, entErrs];
+    return [null, rootErrs, entErrs];
   }
 
 }

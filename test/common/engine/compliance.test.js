@@ -152,9 +152,11 @@ describe('Compliance', () => {
       // console.log(util.inspect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource'), {depth: null}));
     });
     it('should run checks and validations in a separate context', () => {
-      const [rootErrs, entErrs] = compliance.verifySchemaCompliance(schemaExt, sampleInitEntitlements, 'entResource');
+      const [loadErr, rootErrs, entErrs] = compliance.verifySchemaCompliance(schemaExt, sampleInitEntitlements, 'entResource');
+      // console.log(loadErr)
       // console.log(util.inspect(rootErrs));
       // console.log(util.inspect(entErrs));
+      expect(loadErr).to.be.null;
       expect(rootErrs.size).to.equal(0);
       expect(entErrs.size).to.equal(0);
       // console.log(util.inspect(compliance.complyCache.toJS(), { depth: null }))
