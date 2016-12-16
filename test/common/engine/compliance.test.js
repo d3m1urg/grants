@@ -153,7 +153,7 @@ describe('Compliance', () => {
     });
     it('should run checks and validations in a separate context', () => {
       const [loadErr, rootErrs, entErrs] = compliance.verifySchemaCompliance(schemaExt, sampleInitEntitlements, 'entResource');
-      // console.log(loadErr)
+      console.log(loadErr)
       // console.log(util.inspect(rootErrs));
       // console.log(util.inspect(entErrs));
       expect(loadErr).to.be.null;

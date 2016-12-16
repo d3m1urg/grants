@@ -26,3 +26,8 @@ export const COMPILER = {
   },
 };
 
+export const ERROR = {
+  RULE: {
+    COMPILE: 'ERROR_RULE_COMPILE',
+  },
+};

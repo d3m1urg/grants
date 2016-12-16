@@ -9,6 +9,10 @@ import VError from 'verror';
 import EventEmitter from 'eventemitter3';
 import Immutable from 'immutable';
 
+import { ERROR } from './constants';
+
+const { RULE: { COMPILE } } = ERROR;
+
 const rulesDir = path.join(path.normalize(path.join(__dirname, '..')), 'rules');
 
 const rulesKey = Object.create({
@@ -93,7 +97,17 @@ class Compliance extends EventEmitter {
           this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
           names.pop();
         } catch (e) {
-          throw new VError(e, 'Failed to compile "%s" rule at "%s" root', rule.name, schema.name);
+          throw new VError({
+            name: COMPILE,
+            cause: e,
+            strict: true,
+            info: {
+              schema: schema.name,
+              path: names,
+              rule: rule.name,
+              fn: rule.fn,
+            },
+          }, 'Failed to compile "%s" rule at root', rule.name);
         }
       });
     }
@@ -135,7 +149,17 @@ class Compliance extends EventEmitter {
             this.rulesCache = this.rulesCache.setIn([...names, rulesKey], defRule);
             names.pop();
           } catch (e) {
-            throw new VError(e, 'Failed to compile "%s" rule at "%s"', rule.name, names.join('.'));
+            throw new VError({
+              name: COMPILE,
+              cause: e,
+              strict: true,
+              info: {
+                schema: schema.name,
+                path: names,
+                rule: rule.name,
+                fn: rule.fn,
+              },
+            }, 'Failed to compile "%s" rule', rule.name);
           }
         });
       }
