@@ -311,15 +311,7 @@ class Compliance extends EventEmitter {
     const rootErrs = this.verifyRootCompliance(entitlements, resource);
     const entErrs = this.verifyEntitlementsCompliance(entitlements, resource);
     if (rootErrs.size > 0 || entErrs.size > 0) {
-      this.emit(ENTITLEMENTS_INVALID, new VError({
-        name: ENTITLEMENTS_INVALID,
-        cause: entitlements,
-        strict: true,
-        info: {
-          rootErrs,
-          entErrs,
-        },
-      }, 'Entitlements verification for "%s" failed', resource));
+      this.emit(ENTITLEMENTS_INVALID, rootErrs, entErrs);
     } else {
       this.emit(VERIFIED, entitlements);
     }

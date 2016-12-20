@@ -36,9 +36,9 @@ function listenToEvents() {
     event: LOADED,
     data: { name },
   }));
-  compliance.on(ENTITLEMENTS_INVALID, error => process.send({
+  compliance.on(ENTITLEMENTS_INVALID, (rootErrs, entErrs) => process.send({
     event: ENTITLEMENTS_INVALID,
-    data: { error },
+    data: { root: rootErrs, ent: entErrs },
   }));
   compliance.on(VERIFIED, entitlements => process.send({
     event: VERIFIED,
