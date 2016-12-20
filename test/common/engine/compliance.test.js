@@ -4,6 +4,9 @@ import util from 'util';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import Compliance from '../../../src/common/engine/compliance';
+import { COMPLIANCE } from '../../../src/common/engine/constants';
+
+const { SCHEMA: { COMPLY } } = COMPLIANCE;
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
@@ -128,15 +131,12 @@ describe('Compliance', () => {
   });
   describe('#definedRules', () => {
     it('should correctly load user defined rules', () => {
-      compliance.loadExternalRules(schema);
+      compliance.loadSchema({ schema });
       cache = compliance.rulesCache.toJS();
       const comply = compliance.complyCache.toJS();
-      // console.log(util.inspect(comply, { depth: null }));
-      // console.log(util.inspect(cache, { depth: null }));
       expect(cache).to.have.deep.property('entResource.ent.entRule');
       expect(cache).to.have.deep.property('entResource.ent.internalEnt');
       expect(cache).to.have.deep.property('entResource.ent.internalEnt.trueRule');
-      // expect(comply).to.have.deep.property('entResource.ent.@testKey@');
       expect(comply).to.have.deep.property('entResource.ent.internalEnt.@testKey@');
       expect(comply).to.have.deep.property('entResource.ent2.@testKey@');
       expect(compliance.findRule(['entResource', 'ent', 'internalEnt'], 'entRule')).to.eql(['entResource', 'ent']);
@@ -149,20 +149,13 @@ describe('Compliance', () => {
     it('should check whether values comply with rules set', () => {
       expect(compliance.verifyEntitlementsCompliance(sampleGoodEntitlements, 'entResource').size).to.equal(0);
       expect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource').size).to.equal(2);
-      // console.log(util.inspect(compliance.verifyEntitlementsCompliance(sampleBadEntitlements, 'entResource'), {depth: null}));
     });
-    it('should run checks and validations in a separate context', () => {
-      const [loadErr, rootErrs, entErrs] = compliance.verifySchemaCompliance(schemaExt, sampleInitEntitlements);
-      if (loadErr) {
-        console.log(loadErr);
-      }
-      // console.log(util.inspect(rootErrs));
-      // console.log(util.inspect(entErrs));
-      expect(loadErr).to.be.null;
-      expect(rootErrs.size).to.equal(0);
-      expect(entErrs.size).to.equal(0);
-      // console.log(util.inspect(compliance.complyCache.toJS(), { depth: null }))
-      // console.log(util.inspect(compliance.rulesCache.toJS(), { depth: null }))
+    it('should run checks and validations in a separate context', (done) => {
+      compliance.on(COMPLY, (name) => {
+        expect(name).to.equal('entResource');
+        done();
+      });
+      compliance.checkSchema({ schema: schemaExt, entitlements: sampleInitEntitlements });
     });
   });
 });

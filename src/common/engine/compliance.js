@@ -36,7 +36,9 @@ class Compliance extends EventEmitter {
     this.rulesCache = Immutable.Map({});
     this.complyCache = Immutable.Map({});
     this.builtInRules = null;
-    this.verifySchemaCompliance = this.verifySchemaCompliance.bind(this);
+    this.checkSchema = this.checkSchema.bind(this);
+    this.loadSchema = this.loadSchema.bind(this);
+    this.verifyEntitlements = this.verifyEntitlements.bind(this);
   }
 
   loadPredefinedRules() {
@@ -183,7 +185,7 @@ class Compliance extends EventEmitter {
   }
 
   verifyEntryCompliance(rpath, value) {
-    if (!this.complyCache.hasIn(rpath)) {
+    if (value === null || !this.complyCache.hasIn([...rpath, rulesKey])) {
       return new Set();
     }
     const rules = this.complyCache.getIn([...rpath, rulesKey]).map((item) => {
@@ -243,7 +245,7 @@ class Compliance extends EventEmitter {
       } else {
         break;
       }
-      if (typeof value === 'object' && !(value instanceof Array)) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
         keysStack.push(currentKeys);
         objStack.push(currentObj);
         currentKeys = Object.keys(value);

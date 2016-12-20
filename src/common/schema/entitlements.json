@@ -2,87 +2,90 @@
   "$schema":    "http://json-schema.org/draft-04/schema#",
   "title":      "Grants.js common entitlements schema",
   "type":       "object",
-  "required":   ["name", "label", "children", "revision"],
-  "properties":{
-    "name":       {"$ref": "#/definitions/child/properties/name"},
-    "label":      {"$ref": "#/definitions/child/properties/label"},
-    "comply":     {"$ref": "#/definitions/child/properties/comply"},
-    "children":   {"$ref": "#/definitions/child/properties/children"},
-    "revision":   {"type": "string"}
+  "required":   [ "name", "label", "children", "revision" ],
+  "properties": {
+    "name":       { "$ref": "#/definitions/child/properties/name" },
+    "label":      { "$ref": "#/definitions/child/properties/label" },
+    "comply":     { "$ref": "#/definitions/child/properties/comply" },
+    "children":   { "$ref": "#/definitions/child/properties/children" },
+    "revision":   { "type": "string" }
   },
   "additionalProperties": false,
   "definitions":  {
-    "child":  {
+    "child": {
       "type":       "object",
-      "required":   ["name", "label", "type", "comply"],
+      "required":   [ "name", "label", "description", "type", "comply" ],
       "properties": {
-        "name":       {
-                        "type": "string",
-                        "pattern": "^[0-9A-Za-z\\.\\-_]+$"
-                      },
-        "label":      {"type": "string"},
-        "type":       {
-                        "type": "string",
-                        "enum": ["boolean", "number", "string", "enum", "range"]
-                      },
-        "init":   {"type": ["boolean", "number", "string", "array", "null"]},
-        "comply":   {
-          "type": "object",
-          "required": ["rules"],
+        "name":         {
+                          "type": "string",
+                          "pattern": "^[0-9A-Za-z\\.\\-_]+$"
+                        },
+        "label":        { "type": "string" },
+        "description":  { "type": "string" },
+        "type":         {
+                          "type": "string",
+                          "enum": [ "boolean", "number", "string", "enum", "range" ]
+                        },
+        "init":         { "type": [ "boolean", "number", "string", "array", "null" ] },
+        "disabled":     { "type": [ "boolean", "number", "string", "array", "null" ] },
+        "comply": {
+          "type":       "object",
+          "required":   [ "rules" ],
           "properties": {
             "rules": {
-              "type": "array",
-              "items": {
-                "oneOf": [
-                  {
-                    "type":"string"
-                  },
-                  {
-                    "type": "array",
-                    "items": [ {"type": "string"} ],
-                    "additionalItems": true
-                  },
-                ]
-              }
+              "type":   "array",
+              "items":  {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "array",
+                              "items": [ { "type": "string" } ],
+                              "additionalItems": true
+                            }
+                          ]
+                        }
             },
             "define": {
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["name", "description", "fn", "args", "errorText"],
+                "required": [ "name", "label", "description", "fn", "args", "errorText" ],
                 "properties": {
-                  "name": {"type": "string"},
-                  "description": {"type": "string"},
-                  "fn": {"type": "string"},
+                  "name":         { "type": "string" },
+                  "label":        { "type": "string" },
+                  "description":  { "type": "string" },
+                  "fn":           { "type": "string" },
                   "args": {
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "required": ["type", "required"],
+                      "type":       "object",
+                      "required":   ["type", "required"],
                       "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": ["boolean", "number", "string", "array", "object", "null"]
-                        },
-                        "required": {
-                          "type": "boolean"
-                        }
+                                      "type": {
+                                        "type": "string",
+                                        "enum": ["boolean", "number", "string", "array", "object", "null"]
+                                      },
+                                      "required": {
+                                        "type": "boolean"
+                                      }
                       },
                       "additionalProperties": false
                     },
                     "additionalItems": false
                   },
-                  "errorMessage": {"type": "string"}
+                  "errorMessage": { "type": "string" }
                 },
                 "additionalProperties": false
               }
             }
           }
         },
-        "children":   {
-          "type":   "array",
-          "items":  {"$ref": "#/definitions/child"}
-        },
+        "children": {
+                      "type":   "array",
+                      "items":  { "$ref": "#/definitions/child" }
+                    },
       },
       "additionalProperties": false
     }
