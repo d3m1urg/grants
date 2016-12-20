@@ -11,10 +11,9 @@ import Immutable from 'immutable';
 
 import { COMPLIANCE } from './constants';
 
-const { ERROR: { RULE: { COMPILE },
-        SCHEMA: { VERIFY: SC_VERIFY_ERR, LOAD: SC_LOAD_ERR },
-        ENTITLE: { VERIFY: EN_VERIFY_ERR } },
-        EVENT: { COMPLY, LOAD: LOAD_EVT, VERIFIED } } = COMPLIANCE;
+const { RULE: { INVALID: RULE_INVALID },
+        SCHEMA: { COMPLY, LOADED, INVALID: SCHEMA_INVALID },
+        ENTITLEMENTS: { VERIFIED, INVALID: ENTITLEMENTS_INVALID } } = COMPLIANCE;
 
 const rulesDir = path.join(path.normalize(path.join(__dirname, '..')), 'rules');
 
@@ -102,7 +101,7 @@ class Compliance extends EventEmitter {
           names.pop();
         } catch (e) {
           throw new VError({
-            name: COMPILE,
+            name: RULE_INVALID,
             cause: e,
             strict: true,
             info: {
@@ -154,7 +153,7 @@ class Compliance extends EventEmitter {
             names.pop();
           } catch (e) {
             throw new VError({
-              name: COMPILE,
+              name: RULE_INVALID,
               cause: e,
               strict: true,
               info: {
@@ -260,7 +259,7 @@ class Compliance extends EventEmitter {
     return incorrectValues;
   }
 
-  verifySchema(schema, entitlements) {
+  checkSchema({ schema, entitlements }) {
     const context = {
       rulesCache: this.builtInRules,
       complyCache: Immutable.Map({}),
@@ -275,8 +274,8 @@ class Compliance extends EventEmitter {
       rootErrs = this.verifyRootCompliance.call(context, entitlements, schema.name);
       entErrs = this.verifyEntitlementsCompliance.call(context, entitlements, schema.name);
     } catch (err) {
-      this.emit(SC_VERIFY_ERR, new VError({
-        name: SC_VERIFY_ERR,
+      this.emit(SCHEMA_INVALID, new VError({
+        name: SCHEMA_INVALID,
         cause: err,
         strict: true,
         info: { schema },
@@ -284,33 +283,41 @@ class Compliance extends EventEmitter {
       return;
     }
     if (rootErrs.size > 0 || entErrs.size > 0) {
-      this.emit(SC_VERIFY_ERR, null, rootErrs, entErrs);
+      this.emit(SCHEMA_INVALID, null, rootErrs, entErrs);
     } else {
       this.emit(COMPLY, schema.name);
     }
   }
 
-  loadSchema(schema) {
+  loadSchema({ schema }) {
     try {
       this.loadExternalRootRules(schema);
       this.loadExternalRules(schema);
     } catch (err) {
-      this.emit(SC_LOAD_ERR, new VError({
-        name: SC_LOAD_ERR,
+      this.emit(SCHEMA_INVALID, new VError({
+        name: SCHEMA_INVALID,
         cause: err,
         strict: true,
         info: { schema },
       }, 'Failed to load schema "%s"', schema.name));
       return;
     }
-    this.emit(LOAD_EVT, schema.name);
+    this.emit(LOADED, schema.name);
   }
 
-  verifyEntitlements(entitlements, resource) {
+  verifyEntitlements({ entitlements, resource }) {
     const rootErrs = this.verifyRootCompliance(entitlements, resource);
     const entErrs = this.verifyEntitlementsCompliance(entitlements, resource);
     if (rootErrs.size > 0 || entErrs.size > 0) {
-      this.emit(EN_VERIFY_ERR, entitlements, rootErrs, entErrs);
+      this.emit(ENTITLEMENTS_INVALID, new VError({
+        name: ENTITLEMENTS_INVALID,
+        cause: entitlements,
+        strict: true,
+        info: {
+          rootErrs,
+          entErrs,
+        },
+      }, 'Entitlements verification for "%s" failed', resource));
     } else {
       this.emit(VERIFIED, entitlements);
     }
