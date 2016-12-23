@@ -14,7 +14,7 @@
   "definitions":  {
     "child": {
       "type":       "object",
-      "required":   [ "name", "label", "description", "type", "comply" ],
+      "required":   [ "name", "label", "type", "comply" ],
       "properties": {
         "name":         {
                           "type": "string",
