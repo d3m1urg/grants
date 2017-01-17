@@ -51,7 +51,7 @@
               "type": "array",
               "items": {
                 "type": "object",
-                "required": [ "name", "label", "description", "fn", "args", "errorText" ],
+                "required": [ "name", "label", "description", "fn", "args", "errorMessage" ],
                 "properties": {
                   "name":         { "type": "string" },
                   "label":        { "type": "string" },
