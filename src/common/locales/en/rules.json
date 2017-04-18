@@ -1,0 +1,58 @@
+{
+  "common": {
+    "rules": {
+      "string": {
+        "match": {
+          "label": "Match",
+          "description": "Determines whether the string matches the specified regular expression",
+          "argsLabels": ["Value", "Regex"],
+          "errorText": "Must match regular expression {{args.1}}"
+        },
+        "minLen": {
+          "label": "Minimum length",
+          "description": "Checks whether string length is equal or greater than provided number",
+          "argsLabels": ["Value", "Minimum"],
+          "errorText": "Is shorter than allowed {{args.1}} symbols"
+        },
+        "maxLen": {
+          "label": "Maximum length",
+          "description": "Checks whether string length is equal or less than provided number",
+          "argsLabels": ["Value", "Maximum"],
+          "errorText": "Is longer than allowed {{args.1}} symbols"
+        }
+      },
+      "number": {
+        "num": {
+          "label": "Is number",
+          "description": "Checks if a value is a finite number",
+          "argsLabels": ["Value"],
+          "errorText": "Is not a number"
+        },
+        "min": {
+          "label": "Greater or equal",
+          "description": "Checks that provided value is greater or equal to minimum allowed value",
+          "argsLabels": ["Value", "Minimum"],
+          "errorText": "Must be greater or equal to {{args.1}}"
+        },
+        "max": {
+          "label": "Less or equal",
+          "description": "Checks that provided value is less or equal to maximum allowed value",
+          "argsLabels": ["Value", "Maximum"],
+          "errorText": "Must be less or equal to {{args.1}}"
+        },
+        "int": {
+          "label": "Safe integer",
+          "description": "Checks that the provided value is a safe integer [-(2^53 - 1), 2^53 - 1]",
+          "argsLabels": ["Value"],
+          "errorText": "Is not a safe integer"
+        },
+        "precision": {
+          "label": "Precision",
+          "description": "Checks whether provided value has specified precision",
+          "argsLabels": ["Value", "Precision"],
+          "errorText": "Value must have precision of {{args.1}}"
+        }
+      }
+    }
+  }
+}

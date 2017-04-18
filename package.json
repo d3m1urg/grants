@@ -26,6 +26,7 @@
     "babel-polyfill": "^6.16.0",
     "bunyan": "^1.8.5",
     "eventemitter3": "^2.0.2",
+    "i18next": "^7.2.3",
     "immutable": "^3.8.1",
     "is-my-json-valid": "^2.15.0",
     "koa": "^1.2.4",

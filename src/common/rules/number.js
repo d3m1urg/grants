@@ -1,26 +1,31 @@
 /**
- * Checks whether provided is value a number which is:
- *   - finite
- *   - greater/greater or equal to minimal value
- * @param  {Number}  value    The number to check.
- * @param  {Number}  minValue The minimal valid value to check against.
- * @param  {Boolean} include  Checks for greater or equal if set to true (default), otherwise checks for just 'greater than'.
- * @return {Boolean}          Whether 'value' is greater / greater or equal to 'minValue'
+ * Checks whether the provided value is a finite number.
+ * @param  {Number} value Value to check.
+ * @return {Boolean}      true for a finite number, false - otherwise.
  */
-const min = (value, minValue, include = true) =>
-  Number.isFinite(value) && (include ? value >= minValue : value > minValue);
+const num = value => Number.isFinite(value);
 
 /**
  * Checks whether provided is value a number which is:
  *   - finite
- *   - less/less or equal to maximum value
+ *   - greater or equal to minimal value
+ * @param  {Number}  value    The number to check.
+ * @param  {Number}  minValue The minimal valid value to check against.
+ * @return {Boolean}          Whether 'value' is greater or equal to 'minValue'
+ */
+const min = (value, minValue) =>
+  Number.isFinite(value) && (value >= minValue);
+
+/**
+ * Checks whether provided is value a number which is:
+ *   - finite
+ *   - less or equal to maximum value
  * @param  {Number}  value    The number to check.
  * @param  {Number}  maxValue The maximum valid value to check against.
- * @param  {Boolean} include  Checks for 'less or equal' if set to true (default), otherwise checks for just 'less than'.
- * @return {Boolean}          Whether 'value' is less / less or equal to 'maxValue'
+ * @return {Boolean}          Whether 'value' is less or equal to 'maxValue'
  */
-const max = (value, maxValue, include = true) =>
-  Number.isFinite(value) && (include ? value <= maxValue : value < maxValue);
+const max = (value, maxValue) =>
+  Number.isFinite(value) && (value <= maxValue);
 
 /**
  * Checks whether the provided value is a safe integer in terms of JavaScript (-(2^53 - 1) < value < 2^53 - 1).
@@ -57,30 +62,87 @@ const precision = (value, prec) => (String(value).search(new RegExp(`^[0-9]+\.([
  */
 export const rules = [
   {
+    name: 'num',
+    label: 'common.rules.number.num.label',
+    description: 'common.rules.number.num.description',
+    args: [
+      {
+        type: 'number',
+        required: true,
+        label: 'common.rules.number.num.argsLabels.0',
+      },
+    ],
+    fn: num,
+    errorText: 'common.rules.number.num.errorText',
+  },
+  {
     name: 'min',
+    label: 'common.rules.number.min.label',
     description: 'common.rules.number.min.description',
-    args: [{ type: 'number', required: true }, { type: 'number', required: true }, { type: 'boolean', required: false }],
+    args: [
+      {
+        type: 'number',
+        required: true,
+        label: 'common.rules.number.min.argsLabels.0',
+      },
+      {
+        type: 'number',
+        required: true,
+        label: 'common.rules.number.min.argsLabels.1',
+      },
+    ],
     fn: min,
     errorText: 'common.rules.number.min.errorText',
   },
   {
     name: 'max',
+    label: 'common.rules.number.max.label',
     description: 'common.rules.number.max.description',
-    args: [{ type: 'number', required: true }, { type: 'number', required: true }, { type: 'boolean', required: false }],
+    args: [
+      {
+        type: 'number',
+        required: true,
+        label: 'common.rules.number.max.argsLabels.0',
+      },
+      {
+        type: 'number',
+        required: true,
+        label: 'common.rules.number.max.argsLabels.1',
+      },
+    ],
     fn: max,
     errorText: 'common.rules.number.max.errorText',
   },
   {
     name: 'int',
+    label: 'common.rules.number.int.label',
     description: 'common.rules.number.int.description',
-    args: [{ type: 'number', required: true }],
+    args: [
+      {
+        type: 'number',
+        required: true,
+        label: 'common.rules.number.int.argsLabels.0',
+      },
+    ],
     fn: int,
     errorText: 'common.rules.number.int.errorText',
   },
   {
     name: 'precision',
+    label: 'common.rules.number.precision.label',
     description: 'common.rules.number.precision.description',
-    args: [{ type: 'number', required: true }, { type: 'number', required: true }],
+    args: [
+      {
+        type: 'number',
+        required: true,
+        label: 'common.rules.number.precision.argsLabels.0',
+      },
+      {
+        type: 'number',
+        required: true,
+        label: 'common.rules.number.precision.argsLabels.1',
+      },
+    ],
     fn: precision,
     errorText: 'common.rules.number.precision.errorText',
   },

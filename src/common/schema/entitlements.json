@@ -61,15 +61,11 @@
                     "type": "array",
                     "items": {
                       "type":       "object",
-                      "required":   ["type", "required"],
+                      "required":   ["type", "required", "label"],
                       "properties": {
-                                      "type": {
-                                        "type": "string",
-                                        "enum": ["boolean", "number", "string", "array", "object", "null"]
-                                      },
-                                      "required": {
-                                        "type": "boolean"
-                                      }
+                                      "type": { "type": "string", "enum": ["boolean", "number", "string", "array", "object", "null"] },
+                                      "required": { "type": "boolean" },
+                                      "label": { "type": "string" }
                       },
                       "additionalProperties": false
                     },
