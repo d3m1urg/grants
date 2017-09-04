@@ -52,6 +52,14 @@
           "argsLabels": ["Value", "Precision"],
           "errorText": "Value must have precision of {{args.1}}"
         }
+      },
+      "schema": {
+        "valid": {
+          "label": "Matches schema",
+          "decription": "Checks whether provided object matches JSON schema",
+          "argsLabels": ["Value", "Schema"],
+          "errorText": "Object do not match provided schema"
+        }
       }
     }
   }

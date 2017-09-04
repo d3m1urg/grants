@@ -4,10 +4,11 @@
   "type":       "object",
   "required":   [ "name", "label", "children", "revision" ],
   "properties": {
-    "name":       { "$ref": "#/definitions/child/properties/name" },
-    "label":      { "$ref": "#/definitions/child/properties/label" },
-    "comply":     { "$ref": "#/definitions/child/properties/comply" },
-    "children":   { "$ref": "#/definitions/child/properties/children" },
+    "name":         { "$ref": "#/definitions/child/properties/name" },
+    "label":        { "$ref": "#/definitions/child/properties/label" },
+    "comply":       { "$ref": "#/definitions/child/properties/comply" },
+    "children":     { "$ref": "#/definitions/child/properties/children" },
+    "description":  { "$ref": "#/definitions/child/properties/description" },
     "revision":   { "type": "string" }
   },
   "additionalProperties": false,

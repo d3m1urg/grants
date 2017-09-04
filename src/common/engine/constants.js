@@ -8,6 +8,15 @@
  * - INVALIDATED: emitted when a Profile becomes invalid due to dependencies invalidation.
  * @type {Object}
  */
+
+export const PROFILE_INVALID    = '[Profile] Invalid';
+export const PROFILE_VALID      = '[Profile] Valid';
+export const PROFILE_PROCESS    = '[Profile] Process';
+export const PROFILE_INVALIDATE = '[Profile] Invalidate';
+
+export const REDUCER_PROCESS    = '[Reducer] Process';
+export const REDUCER_COMPLETE   = '[Reducer] Complete';
+
 export const PROFILE = {
   STATE: {
     INVALID: 'PROFILE_STATE_INVALID',

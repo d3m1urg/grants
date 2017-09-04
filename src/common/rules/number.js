@@ -28,7 +28,8 @@ const max = (value, maxValue) =>
   Number.isFinite(value) && (value <= maxValue);
 
 /**
- * Checks whether the provided value is a safe integer in terms of JavaScript (-(2^53 - 1) < value < 2^53 - 1).
+ * Checks whether the provided value is a safe integer in terms of JavaScript
+ * (-(2^53 - 1) < value < 2^53 - 1).
  * @param  {Number} value The value to check
  * @return {Boolean}      true if 'value' is safe integer, false otherwise
  */
@@ -44,7 +45,8 @@ const precision = (value, prec) => (String(value).search(new RegExp(`^[0-9]+\.([
 
 /**
  * Exported array holds objects describing built-in rules.
- * It helps validating schemas obtained from external APIs to comply with the provided rule checking API.
+ * It helps validating schemas obtained from external APIs to comply with the provided 
+ * rule checking API.
  * Each object in 'define' array has the following shape:
  *   {
  *     name:          'string'    -> a short rule name, almost always - the function name
