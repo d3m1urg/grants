@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "babel src/common -d dist/common",
-    "test": "npm run build && mocha --timeout 10000 --compilers js:babel-register --reporten nyan --recursive test/**/*.test.js",
+    "test": "mocha --timeout 10000 --compilers ts:ts-node/register --reporter nyan --recursive test/**/*.test.ts",
     "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha -- --compilers js:babel-register --reporter nyan --recursive test/**/*.test.js"
   },
   "repository": {
@@ -40,9 +40,13 @@
     "koa-static": "^2.0.0",
     "lodash": "^4.17.2",
     "uuid": "^3.0.1",
-    "verror": "^1.9.0"
+    "verror": "^1.10.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.0.4",
+    "@types/mocha": "^2.2.42",
+    "@types/uuid": "^3.4.2",
+    "@types/verror": "^1.10.1",
     "babel": "^6.5.2",
     "babel-cli": "^6.18.0",
     "babel-core": "^6.18.2",
@@ -57,6 +61,8 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.8.0",
     "istanbul": "^1.1.0-alpha.1",
-    "mocha": "^3.2.0"
+    "mocha": "^3.2.0",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.4.2"
   }
 }

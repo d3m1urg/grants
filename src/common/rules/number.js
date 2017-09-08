@@ -41,7 +41,8 @@ const int = value => Number.isSafeInteger(value);
  * @param  {Number} prec  Number of digits after '.'
  * @return {[type]}       true is the number of digits equals 'prec', false otherwise
  */
-const precision = (value, prec) => (String(value).search(new RegExp(`^[0-9]+\.([0-9]{${prec}})$`)) >= 0);
+const precision = (value, prec) =>
+  (String(value).search(new RegExp(`^[0-9]+\.([0-9]{${prec}})$`)) >= 0);
 
 /**
  * Exported array holds objects describing built-in rules.
