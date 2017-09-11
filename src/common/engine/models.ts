@@ -16,7 +16,7 @@ export interface Entitlement {
     onCustomize(mask: number): void;
     onCompiled(permissions: any): void;
     onValidated(): void;
-    
+    onDependencyChanged(dependencyId: string): void;
 }
 
 export interface EntitlementMetadata {

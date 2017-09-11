@@ -3,6 +3,7 @@ import * as uuid4 from 'uuid/v4';
 import * as uuid5 from 'uuid/v5';
 import { VError } from 'verror';
 
+import { RegularEntitlement } from './entitlement';
 import { Entitlement, Registry } from './models';
 
 import { ENTITLEMENT } from './constants';
@@ -48,7 +49,8 @@ class LocalRegistry extends EventEmitter implements Registry {
     }
 
     private registerEventListeners(source: Entitlement, target: Entitlement): void {
-        ;
+        const sourceEmitter = source as RegularEntitlement;
+        sourceEmitter.on(ENTITLEMENT.VALIDATE.OK, target.onDependencyChanged);
     }
 
     private updateDependencies(entitlement: Entitlement): void {

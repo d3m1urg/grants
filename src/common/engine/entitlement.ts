@@ -40,4 +40,8 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
     public onCustomize(mask: number): void {
         ;
     }
+
+    onDependencyChanged(dependencyId: string): void {
+        ;
+    };
 }
