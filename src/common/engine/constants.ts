@@ -34,13 +34,16 @@ export const ENTITLEMENT = {
         OK: '[Entitlement] Customize Ok',
         ERROR: '[Entitlement] Customize Error',
     },
+    STATE: {
+        INVALID: '[Entitlement] State Invalid',
+    },
     IS: {
-        ACTIVE: 1, // can be inactivated -> set via 'CUSTOMIZE'
-        COMPILED: 1 << 1,
-        VALID: 1 << 2,
-        ANNOUNCED: 1 << 3,
-        WRITABLE: 1 << 4, // can be updated -> set via 'CUSTOMIZE'
-        REMOVABLE: 1 << 5, // can be deleted -> set via 'CUSTOMIZE'
+        ACTIVE:     1, // can be inactivated -> set via 'CUSTOMIZE'
+        COMPILED:   1 << 1,
+        VALID:      1 << 2,
+        IMPLICIT:   1 << 3, // can not be published -> set via 'CUSTOMIZE'
+        SEALED:     1 << 4, // can not be updated -> set via 'CUSTOMIZE'
+        PINNED:     1 << 5, // can not be deleted -> set via 'CUSTOMIZE'
     },
 };
 
@@ -57,5 +60,18 @@ export const COMPLIANCE = {
         NOW: '[Compliance] Verify Now',
         OK: '[Compliance] Verify Ok',
         ERROR: '[Compliance] Verify Error',
-     },
+    },
+};
+
+export const DIRECTORY = {
+    PUBLISH: {
+        NOW: '[Directory] Publish Now',
+        OK: '[Directory] Publish Ok',
+        ERROR: '[Directory] Publish Error',
+    },
+    REVOKE: {
+        NOW: '[Directory] Revoke Now',
+        OK: '[Directory] Revoke Ok',
+        ERROR: '[Directory] Revoke Error',
+    },
 };

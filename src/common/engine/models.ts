@@ -13,13 +13,17 @@ export interface Entitlement {
     dependencies: string[];
     metadata?: EntitlementMetadata;
     setDependenciesState(dependencies: Array<[string, boolean]>): void;
-    isDependable(): boolean;
+    is(stateMask: number): boolean;
     isCompilable(): boolean;
-    onCustomize(mask: number): void;
-    onCompiled(compiled: any): void;
-    onValidated(): void;
-    onStateChanged(actionType: string): void;
+    onStateChanged(actionType: string, payload?: any): void;
     onDependencyChanged(actionType: string, dependency: Entitlement): void;
+}
+
+export interface EntitlementUpdate {
+    id: string;
+    own?: any;
+    dependencies?: string[];
+    metadata?: EntitlementMetadata;
 }
 
 export interface EntitlementMetadata {
@@ -32,4 +36,6 @@ export interface Registry {
     serviceId: string;
     generateEntitlementId(): void;
     addEntitlement(entitlement: Entitlement): void;
+    deleteEntitlement(entitlementId: string): void;
+    updateEntitlement(entitlement: Entitlement): void;
 }

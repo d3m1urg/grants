@@ -4,9 +4,27 @@ import * as uuid5 from 'uuid/v5';
 import { VError } from 'verror';
 
 import { RegularEntitlement } from './entitlement';
-import { Entitlement, Registry } from './models';
+import {
+    Entitlement,
+    EntitlementUpdate,
+    Registry,
+} from './models';
 
-import { COMPILER, COMPLIANCE, ENTITLEMENT } from './constants';
+import {
+    COMPILER,
+    COMPLIANCE,
+    DIRECTORY,
+    ENTITLEMENT,
+} from './constants';
+
+const {
+    IS: {
+        ACTIVE,
+        VALID,
+        SEALED,
+        PINNED,
+    },
+} = ENTITLEMENT;
 
 export class LocalRegistry extends EventEmitter implements Registry {
 
@@ -40,9 +58,10 @@ export class LocalRegistry extends EventEmitter implements Registry {
      * @returns Array of tuples [string, boolean]
      */
     private getEntitlementsState(ids: string[]): Array<[string, boolean]> {
+        const dependable = ACTIVE | VALID
         return ids.map((id: string): [string, boolean] => {
             const entitlement = this.registry.get(id);
-            const isDependable = entitlement ? entitlement.isDependable() : false;
+            const isDependable = entitlement ? entitlement.is(dependable) : false;
             return [id, isDependable];
         });
     }
@@ -57,17 +76,29 @@ export class LocalRegistry extends EventEmitter implements Registry {
     }
 
     /**
-     * Request the compiler component to process the provided entitlement.
-     * @param ent The entitlement object to compile.
+     * Requests the compiler component to process the provided entitlement.
+     * @param entitlement The entitlement object to compile.
      */
-    private requestCompilation = (ent: Entitlement): void => {
-        const dependencies = this.getEntitlementsByIds(ent.dependencies);
-        this.emit(COMPILER.MAKE.NOW, ent, dependencies);
+    private requestCompilation = (entitlement: Entitlement): void => {
+        const dependencies = this.getEntitlementsByIds(entitlement.dependencies);
+        this.emit(COMPILER.MAKE.NOW, entitlement, dependencies);
     }
 
-    private requestValidation = (ent: Entitlement): void => {
-        const dependencies = this.getEntitlementsByIds(ent.dependencies);
-        this.emit(COMPLIANCE.VERIFY.NOW, ent);
+    /**
+     * Requests the compliance component to verify the provided entitlement.
+     * @param entitlement The entitlement object to verify.
+     */
+    private requestValidation = (entitlement: Entitlement): void => {
+        const dependencies = this.getEntitlementsByIds(entitlement.dependencies);
+        this.emit(COMPLIANCE.VERIFY.NOW, entitlement);
+    }
+
+    /**
+     * Requests the directory component to publish the provided entitlement.
+     * @param entitlement The entitlement object to publish.
+     */
+    private requestAnnounce = (entitlement: Entitlement): void => {
+        this.emit(DIRECTORY.PUBLISH.NOW, entitlement);
     }
 
     /**
@@ -82,6 +113,7 @@ export class LocalRegistry extends EventEmitter implements Registry {
         const emitter = entitlement as RegularEntitlement;
         emitter.on(ENTITLEMENT.COMPILE.NOW, this.requestCompilation);
         emitter.on(ENTITLEMENT.VALIDATE.NOW, this.requestValidation);
+        emitter.on(ENTITLEMENT.ANNOUNCE.NOW, this.requestAnnounce);
         this.on(entitlement.id, entitlement.onStateChanged);
         for (const id of entitlement.dependencies) {
             this.on(id, entitlement.onDependencyChanged);
@@ -92,9 +124,20 @@ export class LocalRegistry extends EventEmitter implements Registry {
      * Propagates updated dependencies state to the entitlements object.
      * @param entitlement Entitlements object to update.
      */
-    private updateDependenciesState(entitlement: Entitlement): void {
-        const dependenciesState = this.getEntitlementsState(entitlement.dependencies);
+    private updateDependenciesState(entitlement: Entitlement, newDependencies: string[]): void {
+        const dependenciesState = this.getEntitlementsState(newDependencies);
         entitlement.setDependenciesState(dependenciesState);
+    }
+
+    private removeListeners(entitlement: Entitlement): void {
+        const emitter = entitlement as RegularEntitlement;
+        emitter.removeListener(ENTITLEMENT.COMPILE.NOW, this.requestCompilation);
+        emitter.removeListener(ENTITLEMENT.VALIDATE.NOW, this.requestValidation);
+        emitter.removeListener(ENTITLEMENT.ANNOUNCE.NOW, this.requestAnnounce);
+        this.removeListener(entitlement.id, entitlement.onStateChanged);
+        for (const id of entitlement.dependencies) {
+            this.removeListener(id, entitlement.onDependencyChanged);
+        }
     }
 
     /**
@@ -112,9 +155,67 @@ export class LocalRegistry extends EventEmitter implements Registry {
         }
         this.registry.set(entitlement.id, entitlement);
         this.registerListeners(entitlement);
-        this.updateDependenciesState(entitlement);
+        this.updateDependenciesState(entitlement, entitlement.dependencies);
         this.emit(ENTITLEMENT.ADD.OK, entitlement);
         this.emit(entitlement.id, ENTITLEMENT.ADD.OK, entitlement);
+    }
+
+    public deleteEntitlement = (entitlementId: string): void => {
+        if (!this.hasEntitlement(entitlementId)) {
+            this.emit(ENTITLEMENT.DELETE.ERROR, new VError('Entitlement ["%s"] is not registered', entitlementId));
+            return;
+        }
+        const entitlement = this.registry.get(entitlementId);
+        if (entitlement.is(PINNED)) {
+            this.emit(ENTITLEMENT.DELETE.ERROR,
+                new VError('Entitlement ["%s"] is pinned and can not be deleted', entitlementId));
+            return;
+        }
+        this.registry.delete(entitlementId);
+        this.emit(ENTITLEMENT.DELETE.OK, entitlementId);
+        this.emit(entitlementId, ENTITLEMENT.DELETE.OK);
+        this.removeListeners(entitlement);
+    }
+
+    private updateDependencies(entitlement: Entitlement, newDependencies: string[]): void {
+        for (const id of entitlement.dependencies) {
+            this.removeListener(id, entitlement.onDependencyChanged);
+        }
+        for (const id of newDependencies) {
+            this.addListener(id, entitlement.onDependencyChanged);
+        }
+        this.updateDependenciesState(entitlement, newDependencies);
+    }
+
+    public updateEntitlement = (update: EntitlementUpdate): void => {
+        if (!this.hasEntitlement(update.id)) {
+            this.emit(ENTITLEMENT.UPDATE.ERROR, new VError('Entitlement ["%s"] is not registered', update.id));
+            return;
+        }
+        const entitlement = this.registry.get(update.id);
+        if (entitlement.is(SEALED)) {
+            this.emit(ENTITLEMENT.UPDATE.ERROR,
+                new VError('Entitlement ["%s"] is pinned and can not be updated', entitlement.id));
+            return;
+        }
+        const {
+            own,
+            dependencies,
+            metadata,
+        } = update;
+        if (dependencies) {
+            this.updateDependencies(entitlement, dependencies);
+        }
+        if (own) {
+            entitlement.own = own;
+        }
+        if (metadata) {
+            entitlement.metadata = metadata;
+        }
+        this.emit(ENTITLEMENT.UPDATE.OK, entitlement.id);
+        if (dependencies || own) {
+            this.emit(entitlement.id, ENTITLEMENT.UPDATE.OK);
+        }
     }
 
     /**
