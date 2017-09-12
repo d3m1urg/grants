@@ -13,6 +13,8 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
     public dependencies: string[];
     public metadata?: EntitlementMetadata;
 
+    private dependenciesState: Map<string, boolean>;
+
     constructor(id: string, own: any, dependencies: string[], metadata: EntitlementMetadata) {
         super();
         Object.assign(this, {
@@ -21,11 +23,28 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
             dependencies,
             metadata,
         });
+        this.initDependenciesState();
+    }
+
+    private initDependenciesState(): void {
+        const dependenciesTuples = this.dependencies.map((id: string): [string, boolean] => [id, false]);
+        this.dependenciesState = new Map<string, boolean>(dependenciesTuples);
+    }
+
+    public setDependenciesState(dependenciesTuples: Array<[string, boolean]>): void {
+        this.dependenciesState = new Map<string, boolean>(dependenciesTuples);
+        if (this.isCompilable()) {
+            this.emit(ENTITLEMENT.COMPILE.NOW, this);
+        }
     }
 
     public isDependable(): boolean {
         const isDependableMask = ENTITLEMENT.IS.ACTIVE | ENTITLEMENT.IS.VALID;
         return Boolean(this.state & isDependableMask);
+    }
+
+    public isCompilable(): boolean {
+        return [...this.dependenciesState.values()].every((item: boolean) => item);
     }
 
     public onCompiled = (compiled: any): void => {
@@ -34,14 +53,19 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
     }
 
     public onValidated = (): void => {
-        ;
+        this.state |= ENTITLEMENT.IS.VALID;
+        this.emit(this.id, ENTITLEMENT.IS.VALID);
     }
 
     public onCustomize(mask: number): void {
         ;
     }
 
-    onDependencyChanged(dependencyId: string): void {
+    onStateChanged = (actionType: string): void => {
         ;
-    };
+    }
+
+    onDependencyChanged = (actionType: string, dependency: Entitlement): void => {
+        ;
+    }
 }

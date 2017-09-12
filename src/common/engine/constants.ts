@@ -14,10 +14,10 @@ export const ENTITLEMENT = {
         OK: '[Entitlement] Validate Ok',
         ERROR: '[Entitlement] Validate Error',
     },
-    PUBLISH: {
-        NOW: '[Entitlement] Publish Now',
-        OK: '[Entitlement] Publish Ok',
-        ERROR: '[Entitlement] Publish Error',
+    ANNOUNCE: {
+        NOW: '[Entitlement] Announce Now',
+        OK: '[Entitlement] Announce Ok',
+        ERROR: '[Entitlement] Announce Error',
     },
     UPDATE: {
         NOW: '[Entitlement] Update Now',
@@ -38,8 +38,24 @@ export const ENTITLEMENT = {
         ACTIVE: 1, // can be inactivated -> set via 'CUSTOMIZE'
         COMPILED: 1 << 1,
         VALID: 1 << 2,
-        PUBLISHED: 1 << 3,
+        ANNOUNCED: 1 << 3,
         WRITABLE: 1 << 4, // can be updated -> set via 'CUSTOMIZE'
         REMOVABLE: 1 << 5, // can be deleted -> set via 'CUSTOMIZE'
     },
+};
+
+export const COMPILER = {
+    MAKE: {
+        NOW: '[Compiler] Make Now',
+        OK: '[Compiler] Make Ok',
+        ERROR: '[Compiler] Make Error',
+    },
+};
+
+export const COMPLIANCE = {
+     VERIFY: {
+        NOW: '[Compliance] Verify Now',
+        OK: '[Compliance] Verify Ok',
+        ERROR: '[Compliance] Verify Error',
+     },
 };

@@ -12,11 +12,14 @@ export interface Entitlement {
     state: number;
     dependencies: string[];
     metadata?: EntitlementMetadata;
+    setDependenciesState(dependencies: Array<[string, boolean]>): void;
     isDependable(): boolean;
+    isCompilable(): boolean;
     onCustomize(mask: number): void;
-    onCompiled(permissions: any): void;
+    onCompiled(compiled: any): void;
     onValidated(): void;
-    onDependencyChanged(dependencyId: string): void;
+    onStateChanged(actionType: string): void;
+    onDependencyChanged(actionType: string, dependency: Entitlement): void;
 }
 
 export interface EntitlementMetadata {

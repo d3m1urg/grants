@@ -6,75 +6,121 @@ import { VError } from 'verror';
 import { RegularEntitlement } from './entitlement';
 import { Entitlement, Registry } from './models';
 
-import { ENTITLEMENT } from './constants';
+import { COMPILER, COMPLIANCE, ENTITLEMENT } from './constants';
 
-class LocalRegistry extends EventEmitter implements Registry {
+export class LocalRegistry extends EventEmitter implements Registry {
 
     public serviceId: string;
     private registry: Map<string, Entitlement>;
-    private dependencies: Map<string, Set<Entitlement>>;
 
+    /**
+     * Creates registry for a specified service id.
+     * Service id must be a valid UUID v.4 according to RFC4122.
+     * @param serviceId Unique service id.
+     */
     constructor(serviceId: string) {
         super();
         this.serviceId = serviceId;
         this.registry = new Map<string, Entitlement>();
-        this.dependencies = new Map<string, Set<Entitlement>>();
     }
 
+    /**
+     * Checks whether entitlement with the provided id exists in the registry.
+     * @param id Entitlement unique id
+     * @returns True if entitlement exists in the registry, false otherwise.
+     */
     private hasEntitlement(id: string): boolean {
         return this.registry.has(id);
     }
 
-    private listEntitlements(ids: string[]): Entitlement[] {
-        return ids.map((id: string) => this.registry.get(id));
-    }
-
-    private canCompile(entitlement: Entitlement): boolean {
-        return entitlement.dependencies.every((dependencyId: string) => {
-            const dependency = this.registry.get(dependencyId);
-            if (!dependency) {
-                return false;
-            }
-            return dependency.isDependable();
+    /**
+     * Returns an array of tuples [id: string, dependable: boolean] indicating if an entitlement with specified id
+     * can be used as a dependency in the compilation process.
+     * @param ids Entitlements ids.
+     * @returns Array of tuples [string, boolean]
+     */
+    private getEntitlementsState(ids: string[]): Array<[string, boolean]> {
+        return ids.map((id: string): [string, boolean] => {
+            const entitlement = this.registry.get(id);
+            const isDependable = entitlement ? entitlement.isDependable() : false;
+            return [id, isDependable];
         });
     }
 
-    private updateDependatsSet(id: string, entitlement: Entitlement): void {
-        const dependants = this.dependencies.get(id);
-        if (dependants) {
-            dependants.add(entitlement);
-        } else {
-            this.dependencies.set(id, new Set<Entitlement>([entitlement]));
-        }
+    /**
+     * Returns an array of entitlements whose ids match the provided ones.
+     * @param ids Entitlements ids.
+     * @returns Array of entitlements matching the provided ids.
+     */
+    private getEntitlementsByIds(ids: string[]): Entitlement[] {
+        return ids.map((id: string) => this.registry.get(id));
     }
 
-    private registerEventListeners(source: Entitlement, target: Entitlement): void {
-        const sourceEmitter = source as RegularEntitlement;
-        sourceEmitter.on(ENTITLEMENT.VALIDATE.OK, target.onDependencyChanged);
+    /**
+     * Request the compiler component to process the provided entitlement.
+     * @param ent The entitlement object to compile.
+     */
+    private requestCompilation = (ent: Entitlement): void => {
+        const dependencies = this.getEntitlementsByIds(ent.dependencies);
+        this.emit(COMPILER.MAKE.NOW, ent, dependencies);
     }
 
-    private updateDependencies(entitlement: Entitlement): void {
+    private requestValidation = (ent: Entitlement): void => {
+        const dependencies = this.getEntitlementsByIds(ent.dependencies);
+        this.emit(COMPLIANCE.VERIFY.NOW, ent);
+    }
+
+    /**
+     * Registers event listeners using global hooks (constants) and entitlements ids as event names.
+     * Currently 3 types of listeners are registered:
+     * - registry starts listening for entitlement events (ENTITLEMENT.*);
+     * - entitlement starts listening the registry for state change events;
+     * - entitlement start listening the registry for dependency state changes.
+     * @param entitlement Entitlement which is being processed.
+     */
+    private registerListeners(entitlement: Entitlement): void {
+        const emitter = entitlement as RegularEntitlement;
+        emitter.on(ENTITLEMENT.COMPILE.NOW, this.requestCompilation);
+        emitter.on(ENTITLEMENT.VALIDATE.NOW, this.requestValidation);
+        this.on(entitlement.id, entitlement.onStateChanged);
         for (const id of entitlement.dependencies) {
-            this.updateDependatsSet(id, entitlement);
-            const ancestor = this.registry.get(id);
-            if (ancestor) {
-                this.registerEventListeners(ancestor, entitlement);
-            }
+            this.on(id, entitlement.onDependencyChanged);
         }
     }
 
+    /**
+     * Propagates updated dependencies state to the entitlements object.
+     * @param entitlement Entitlements object to update.
+     */
+    private updateDependenciesState(entitlement: Entitlement): void {
+        const dependenciesState = this.getEntitlementsState(entitlement.dependencies);
+        entitlement.setDependenciesState(dependenciesState);
+    }
+
+    /**
+     * Adds the entitlement to the registry. If another entitlement with the same id is already
+     * present in the registry then new registry is not added and an error message is emitted.
+     * If no entitlement with the same id is present then entitlement is added to the registry,
+     * appropriate listeners are registered and events emitted.
+     * Ancestor and derived entitlements are linked together via emitting events with entitlement
+     * id used as event name.
+     */
     public addEntitlement = (entitlement: Entitlement): void => {
         if (this.hasEntitlement(entitlement.id)) {
             this.emit(ENTITLEMENT.ADD.ERROR, new VError('Entitlement ["%s"] is already added', entitlement.id));
             return;
         }
-        this.updateDependencies(entitlement);
-        if (this.canCompile(entitlement)) {
-            const dependencies = this.listEntitlements(entitlement.dependencies);
-            this.emit(ENTITLEMENT.COMPILE.NOW, entitlement, dependencies);
-        }
+        this.registry.set(entitlement.id, entitlement);
+        this.registerListeners(entitlement);
+        this.updateDependenciesState(entitlement);
+        this.emit(ENTITLEMENT.ADD.OK, entitlement);
+        this.emit(entitlement.id, ENTITLEMENT.ADD.OK, entitlement);
     }
 
+    /**
+     * Generate unique entitlement id for the specified service taking into consideration all currently existing ids.
+     * If an entitlements id collision is detected then it is regenerated.
+     */
     public generateEntitlementId = (): string => {
         let newEntitlementId;
         do {
@@ -84,99 +130,4 @@ class LocalRegistry extends EventEmitter implements Registry {
         return newEntitlementId;
     }
 
-    /**
-     * rawProfile has the following shape:
-     * {
-     *    name: 'string',
-     *    entitlements: {},
-     *    dependencies: [], -> dependencies must be sorted ascendingly according to priorities
-     *    metadata: {}
-     * }
-     * @param  {[type]}
-     * @return {[type]}
-     */
-    registerProfile(rawProfile) {
-        const [canCompile, dependenciesMap] = this.canBeCompiled(rawProfile);
-        const profileData = Object.assign({}, rawProfile,
-            {
-                dependencies: dependenciesMap,
-                state: INVALID,
-                entitlements: {},
-                raw: rawProfile,
-            });
-        const profile = new Profile(profileData);
-        this.enableListeners(rawProfile, profile);
-        this.registry.set(profile.name, profile);
-        if (canCompile) {
-            this.emit(PROCESS, rawProfile);
-        }
-    }
-
-    enableListeners(rawProfile, profile) {
-        const listeners = Array.isArray(rawProfile.dependencies) ?
-            [...rawProfile.dependencies, profile.name] :
-            [profile.name];
-        listeners.forEach((name) => {
-            this.on(name, profile.stateChanged);
-        });
-        profile.on(COMPILE, (name) => {
-            this.emit(PROCESS, this.registry.get(name).raw);
-        });
-        profile.on(INVALIDATE, (name) => {
-            this.emit(name, name, INVALID);
-            this.emit(INVALIDATE, name);
-        });
-    }
-
-    /**
-     * Takes raw profile as input data.
-     * @param  {[type]}
-     * @return {[type]}
-     */
-    canBeCompiled(rawProfile) {
-        const dependenciesMap = new Map();
-        if (!rawProfile.dependencies || rawProfile.dependencies.length === 0) {
-            return [true, dependenciesMap];
-        }
-        let canCompile = true;
-        rawProfile.dependencies.forEach((depName) => {
-            let depState = INVALID;
-            if (this.registry.has(depName)) {
-                depState = this.registry.get(depName).state;
-                if (depState === INVALID) {
-                    canCompile = false;
-                }
-            } else {
-                canCompile = false;
-            }
-            dependenciesMap.set(depName, depState);
-        });
-        return [canCompile, dependenciesMap];
-    }
-
-    updateProfile(rawProfile) {
-        this.deleteProfile(rawProfile.name);
-        this.registerProfile(rawProfile);
-    }
-
-    deleteProfile(name) {
-        this.emit(name, name, INVALID);
-        const profile = this.registry.get(name);
-        const rawProfile = profile.raw;
-        const listeners = Array.isArray(rawProfile.dependencies) ?
-            [...rawProfile.dependencies, profile.name] :
-            [profile.name];
-        listeners.forEach((lname) => {
-            this.removeListener(lname, profile.stateChanged);
-        });
-        profile.removeAllListeners(COMPILE);
-        this.registry.delete(name);
-    }
-
-    hasProfile(name) {
-        return this.registry.has(name);
-    }
-
 }
-
-export default Registry;
