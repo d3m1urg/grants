@@ -74,8 +74,11 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
     }
 
     private onCustomize(mask: number): void {
-        this.state &= mask;
-        
+        const oldState = this.state;
+        this.state = mask | (this.state & (COMPILED | VALID));
+        if (Boolean(oldState & ACTIVE) && !Boolean(this.state & ACTIVE)) {
+            this.emit(this.id, ENTITLEMENT.STATE.INVALID, this);
+        }
     }
 
     private onAdded(): void {

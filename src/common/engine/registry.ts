@@ -33,13 +33,26 @@ export class LocalRegistry extends EventEmitter implements Registry {
 
     /**
      * Creates registry for a specified service id.
-     * Service id must be a valid UUID v.4 according to RFC4122.
+     * Service id must be a valid UUID v.4 according to RFC4122. Otherwise constructor throws an error.
      * @param serviceId Unique service id.
      */
     constructor(serviceId: string) {
         super();
+        if (!this.isUUID(serviceId)) {
+            throw new Error(`serviceId must be a valid UUID v.4 according to RFC4122, got ${serviceId} instead.`);
+        }
         this.serviceId = serviceId;
         this.registry = new Map<string, Entitlement>();
+    }
+
+    /**
+     * Check whether provided string is a valid UUID v.4 according to RFC4122.
+     * @param id Id string to check
+     * @returns True for uuid v.4 strings, false otherwise
+     */
+    private isUUID(id: string): boolean {
+        const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return regex.test(id);
     }
 
     /**
@@ -102,6 +115,13 @@ export class LocalRegistry extends EventEmitter implements Registry {
     }
 
     /**
+     * Forwards entitlement invalidation event to high-order listeners (e.g. Directory, Cache, Log, etc.)
+     */
+    private forwardInvalid = (entitlement: Entitlement): void => {
+        this.emit(ENTITLEMENT.STATE.INVALID, entitlement);
+    }
+
+    /**
      * Registers event listeners using global hooks (constants) and entitlements ids as event names.
      * Currently 3 types of listeners are registered:
      * - registry starts listening for entitlement events (ENTITLEMENT.*);
@@ -114,6 +134,7 @@ export class LocalRegistry extends EventEmitter implements Registry {
         emitter.on(ENTITLEMENT.COMPILE.NOW, this.requestCompilation);
         emitter.on(ENTITLEMENT.VALIDATE.NOW, this.requestValidation);
         emitter.on(ENTITLEMENT.ANNOUNCE.NOW, this.requestAnnounce);
+        emitter.on(ENTITLEMENT.STATE.INVALID, this.forwardInvalid);
         this.on(entitlement.id, entitlement.onStateChanged);
         for (const id of entitlement.dependencies) {
             this.on(id, entitlement.onDependencyChanged);
@@ -129,11 +150,17 @@ export class LocalRegistry extends EventEmitter implements Registry {
         entitlement.setDependenciesState(dependenciesState);
     }
 
+    /**
+     * Removes all listeners registered for an entitlement.
+     * Note that all listeners must be correctly removed in order to prevent memory leaks.
+     * @param entitlement Entitlement which is deregistered as event emitter / listener
+     */
     private removeListeners(entitlement: Entitlement): void {
         const emitter = entitlement as RegularEntitlement;
         emitter.removeListener(ENTITLEMENT.COMPILE.NOW, this.requestCompilation);
         emitter.removeListener(ENTITLEMENT.VALIDATE.NOW, this.requestValidation);
         emitter.removeListener(ENTITLEMENT.ANNOUNCE.NOW, this.requestAnnounce);
+        emitter.removeListener(ENTITLEMENT.STATE.INVALID, this.forwardInvalid);
         this.removeListener(entitlement.id, entitlement.onStateChanged);
         for (const id of entitlement.dependencies) {
             this.removeListener(id, entitlement.onDependencyChanged);
@@ -147,6 +174,7 @@ export class LocalRegistry extends EventEmitter implements Registry {
      * appropriate listeners are registered and events emitted.
      * Ancestor and derived entitlements are linked together via emitting events with entitlement
      * id used as event name.
+     * @param entitlement Entitlement object to add
      */
     public addEntitlement = (entitlement: Entitlement): void => {
         if (this.hasEntitlement(entitlement.id)) {
@@ -160,6 +188,12 @@ export class LocalRegistry extends EventEmitter implements Registry {
         this.emit(entitlement.id, ENTITLEMENT.ADD.OK, entitlement);
     }
 
+    /**
+     * Deletes the entitlement with the provided id from the registry.
+     * Emits error messages if entitlement with the provided id is not found or if the entitlement is pinned, i.e.
+     * can not be deleted without prior calling customize method.
+     * @param entitlementId Id of the entitlement to delete
+     */
     public deleteEntitlement = (entitlementId: string): void => {
         if (!this.hasEntitlement(entitlementId)) {
             this.emit(ENTITLEMENT.DELETE.ERROR, new VError('Entitlement ["%s"] is not registered', entitlementId));
@@ -177,6 +211,12 @@ export class LocalRegistry extends EventEmitter implements Registry {
         this.removeListeners(entitlement);
     }
 
+    /**
+     * Update dependencies for the provided entitlement object.
+     * Removes / adds required event listeners upon updates.
+     * @param entitlement Entitlement object to update.
+     * @param newDependencies Array containing list of new dependencies.
+     */
     private updateDependencies(entitlement: Entitlement, newDependencies: string[]): void {
         for (const id of entitlement.dependencies) {
             this.removeListener(id, entitlement.onDependencyChanged);
@@ -187,6 +227,12 @@ export class LocalRegistry extends EventEmitter implements Registry {
         this.updateDependenciesState(entitlement, newDependencies);
     }
 
+    /**
+     * Updates the entitlement object with provided data which may contain new 'own' entitlement properties, new
+     * dependencies and metadata. Emits errors if no entitlement with provided id is found in the registry or
+     * entitlement is 'sealed', i.e. can not be updated without prior customization.
+     * @param update Update data object
+     */
     public updateEntitlement = (update: EntitlementUpdate): void => {
         if (!this.hasEntitlement(update.id)) {
             this.emit(ENTITLEMENT.UPDATE.ERROR, new VError('Entitlement ["%s"] is not registered', update.id));
