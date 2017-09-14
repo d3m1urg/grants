@@ -21,8 +21,8 @@ const own2 = {
     param1: 1234,
 };
 
-describe('Create new registry', () => {
-    it('should not create a new Registry with incorrect serviceId', () => {
+describe('New Registry', () => {
+    it('should not be created with an incorrect serviceId', () => {
         try {
             const incorrectServiceId = '123';
             registry = new LocalRegistry(incorrectServiceId);
@@ -31,14 +31,14 @@ describe('Create new registry', () => {
             expect(registry).to.be.undefined;
         }
     });
-    it('should create a new Registry with correct (uuid v.4) serviceId', () => {
+    it('should be created with a correct (uuid v.4) serviceId', () => {
         const correctServiceId = uuid();
         registry = new LocalRegistry(correctServiceId);
         expect(registry).to.exist;
     });
 });
 
-describe('Add entitlements to the registry', () => {
+describe('Existing Registry', () => {
     it('should add new entitlement with no dependencies', () => {
         const newId = registry.generateEntitlementId();
         entitlement1 = new RegularEntitlement(newId, own1, []);
