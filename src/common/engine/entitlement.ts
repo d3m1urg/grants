@@ -1,4 +1,5 @@
 import { EventEmitter } from 'eventemitter3';
+import { v5 as isUUIDv5 } from 'is-uuid';
 
 import {
     Entitlement,
@@ -32,6 +33,9 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
 
     constructor(id: string, own: any, dependencies: string[], state = 0, metadata?: EntitlementMetadata) {
         super();
+        if (!isUUIDv5(id)) {
+            throw new Error(`Entitlement id must be a valid UUID v.5 according to RFC4122, got ${id} instead.`);
+        }
         Object.assign(this, {
             id,
             own,
@@ -147,6 +151,8 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
 
     public onDependencyChanged = (actionType: string, dependency: Entitlement): void => {
         switch (actionType) {
+            case ENTITLEMENT.DELETE.OK:
+            case ENTITLEMENT.UPDATE.OK:
             case ENTITLEMENT.STATE.INVALID: {
                 this.onDependencyInvalidated(dependency);
                 break;

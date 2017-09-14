@@ -1,4 +1,5 @@
 import { EventEmitter } from 'eventemitter3';
+import { v4 as isUUIDv4 } from 'is-uuid';
 import * as uuid4 from 'uuid/v4';
 import * as uuid5 from 'uuid/v5';
 import { VError } from 'verror';
@@ -38,21 +39,11 @@ export class LocalRegistry extends EventEmitter implements Registry {
      */
     constructor(serviceId: string) {
         super();
-        if (!this.isUUID(serviceId)) {
+        if (!isUUIDv4(serviceId)) {
             throw new Error(`serviceId must be a valid UUID v.4 according to RFC4122, got ${serviceId} instead.`);
         }
         this.serviceId = serviceId;
         this.registry = new Map<string, Entitlement>();
-    }
-
-    /**
-     * Check whether provided string is a valid UUID v.4 according to RFC4122.
-     * @param id Id string to check
-     * @returns True for uuid v.4 strings, false otherwise
-     */
-    private isUUID(id: string): boolean {
-        const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        return regex.test(id);
     }
 
     /**
@@ -207,7 +198,7 @@ export class LocalRegistry extends EventEmitter implements Registry {
         }
         this.registry.delete(entitlementId);
         this.emit(ENTITLEMENT.DELETE.OK, entitlementId);
-        this.emit(entitlementId, ENTITLEMENT.DELETE.OK);
+        this.emit(entitlementId, ENTITLEMENT.DELETE.OK, entitlement);
         this.removeListeners(entitlement);
     }
 
@@ -260,7 +251,7 @@ export class LocalRegistry extends EventEmitter implements Registry {
         }
         this.emit(ENTITLEMENT.UPDATE.OK, entitlement.id);
         if (dependencies || own) {
-            this.emit(entitlement.id, ENTITLEMENT.UPDATE.OK);
+            this.emit(entitlement.id, ENTITLEMENT.UPDATE.OK, entitlement);
         }
     }
 
