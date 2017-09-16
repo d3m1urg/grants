@@ -5,7 +5,7 @@ import * as uuid from 'uuid/v4';
 import { RegularEntitlement } from '../../../src/common/engine/entitlement';
 import { LocalRegistry } from '../../../src/common/engine/registry';
 
-import { ENTITLEMENT } from '../../../src/common/engine/constants';
+import { COMPILER, ENTITLEMENT } from '../../../src/common/engine/constants';
 
 let registry: LocalRegistry;
 let entitlement1: RegularEntitlement;
@@ -52,15 +52,12 @@ describe('Existing Registry', () => {
     });
     it('should correctly handle sucessfull compile / validation event', () => {
         let val: RegularEntitlement = null;
-        const validate = (ent: RegularEntitlement) => {
-            ent.onStateChanged(ENTITLEMENT.VALIDATE.OK);
-        };
         const cb = (action: string, ent: RegularEntitlement) => {
             val = ent;
         }
-        entitlement1.on(ENTITLEMENT.VALIDATE.NOW, validate);
         entitlement1.on(entitlement1.id, cb);
         entitlement1.onStateChanged(ENTITLEMENT.COMPILE.OK, own1);
+        entitlement1.onStateChanged(ENTITLEMENT.VALIDATE.OK);
         expect(val).to.equal(entitlement1);
         expect(val.is(ENTITLEMENT.IS.ACTIVE | ENTITLEMENT.IS.COMPILED | ENTITLEMENT.IS.VALID)).to.be.true;
     });
@@ -75,6 +72,11 @@ describe('Existing Registry', () => {
         registry.addEntitlement(entitlement2);
         expect(val).to.equal(entitlement2);
     });
+    it('should correctly set entitlements state', () => {
+        entitlement2.onStateChanged(ENTITLEMENT.COMPILE.OK, own2);
+        entitlement2.onStateChanged(ENTITLEMENT.VALIDATE.OK);
+        expect(entitlement2.is(ENTITLEMENT.IS.COMPILED | ENTITLEMENT.IS.VALID)).to.be.true;
+    });
     it('should emit invalidation event when dependency is deleted', () => {
         let val = null;
         const cb = (ent) => {
@@ -84,14 +86,22 @@ describe('Existing Registry', () => {
         registry.deleteEntitlement(entitlement1.id);
         expect(val).to.equal(entitlement2);
     });
-    /* it('should correctly restore entitlement', () => {
+    it('should correctly restore entitlement and recompile dependants', () => {
         let val = null;
         const cb = (ent) => {
             val = ent;
         };
+        let val2 = null;
+        const restore = (ent) => {
+            val2 = ent;
+        }
         registry.on(ENTITLEMENT.ADD.OK, cb);
-        registry.on(ENTITLEMENT.ADD.ERROR, msg => console.log(msg));
+        registry.on(COMPILER.MAKE.NOW, restore);
         registry.addEntitlement(entitlement1);
+        entitlement1.onStateChanged(ENTITLEMENT.COMPILE.OK, own1);
+        entitlement1.onStateChanged(ENTITLEMENT.VALIDATE.OK);
+        expect(entitlement1.is(ENTITLEMENT.IS.ACTIVE | ENTITLEMENT.IS.COMPILED | ENTITLEMENT.IS.VALID)).to.be.true;
         expect(val).to.equal(entitlement1);
-    }); */
+        expect(val2).to.equal(entitlement2);
+    });
 });

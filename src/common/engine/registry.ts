@@ -1,4 +1,4 @@
-import { EventEmitter } from 'eventemitter3';
+import { EventEmitter } from 'events';
 import { v4 as isUUIDv4 } from 'is-uuid';
 import * as uuid4 from 'uuid/v4';
 import * as uuid5 from 'uuid/v5';
@@ -35,6 +35,8 @@ export class LocalRegistry extends EventEmitter implements Registry {
     /**
      * Creates registry for a specified service id.
      * Service id must be a valid UUID v.4 according to RFC4122. Otherwise constructor throws an error.
+     * Number of allowed listeners is increased to a maximum limit (Number.MAX_SAFE_INTEGER) in order to
+     * suppress unwanted warnings.
      * @param serviceId Unique service id.
      */
     constructor(serviceId: string) {
@@ -42,6 +44,7 @@ export class LocalRegistry extends EventEmitter implements Registry {
         if (!isUUIDv4(serviceId)) {
             throw new Error(`serviceId must be a valid UUID v.4 according to RFC4122, got ${serviceId} instead.`);
         }
+        this.setMaxListeners(Number.MAX_SAFE_INTEGER);
         this.serviceId = serviceId;
         this.registry = new Map<string, Entitlement>();
     }
@@ -106,10 +109,17 @@ export class LocalRegistry extends EventEmitter implements Registry {
     }
 
     /**
-     * Forwards entitlement invalidation event to high-order listeners (e.g. Directory, Cache, Log, etc.)
+     * Forwards entitlement invalidation event to high-order listeners (e.g. Directory, Cache, Log, etc.).
      */
     private forwardInvalid = (entitlement: Entitlement): void => {
         this.emit(ENTITLEMENT.STATE.INVALID, entitlement);
+    }
+
+    /**
+     * Forwards dependency entitlement state changes to dependent entitlements.
+     */
+    private forwardStateToDependencies = (state: string, source: Entitlement) => {
+        this.emit(source.id, state, source);
     }
 
     /**
@@ -122,13 +132,14 @@ export class LocalRegistry extends EventEmitter implements Registry {
      */
     private registerListeners(entitlement: Entitlement): void {
         const emitter = entitlement as RegularEntitlement;
-        emitter.on(ENTITLEMENT.COMPILE.NOW, this.requestCompilation);
-        emitter.on(ENTITLEMENT.VALIDATE.NOW, this.requestValidation);
-        emitter.on(ENTITLEMENT.ANNOUNCE.NOW, this.requestAnnounce);
-        emitter.on(ENTITLEMENT.STATE.INVALID, this.forwardInvalid);
-        this.on(entitlement.id, entitlement.onStateChanged);
+        emitter.addListener(ENTITLEMENT.COMPILE.NOW, this.requestCompilation);
+        emitter.addListener(ENTITLEMENT.VALIDATE.NOW, this.requestValidation);
+        emitter.addListener(ENTITLEMENT.ANNOUNCE.NOW, this.requestAnnounce);
+        emitter.addListener(ENTITLEMENT.STATE.INVALID, this.forwardInvalid);
+        emitter.addListener(entitlement.id, this.forwardStateToDependencies);
+        this.prependListener(entitlement.id, entitlement.onStateChanged);
         for (const id of entitlement.dependencies) {
-            this.on(id, entitlement.onDependencyChanged);
+            this.addListener(id, entitlement.onDependencyChanged);
         }
     }
 
@@ -152,6 +163,7 @@ export class LocalRegistry extends EventEmitter implements Registry {
         emitter.removeListener(ENTITLEMENT.VALIDATE.NOW, this.requestValidation);
         emitter.removeListener(ENTITLEMENT.ANNOUNCE.NOW, this.requestAnnounce);
         emitter.removeListener(ENTITLEMENT.STATE.INVALID, this.forwardInvalid);
+        emitter.removeListener(entitlement.id, this.forwardStateToDependencies);
         this.removeListener(entitlement.id, entitlement.onStateChanged);
         for (const id of entitlement.dependencies) {
             this.removeListener(id, entitlement.onDependencyChanged);

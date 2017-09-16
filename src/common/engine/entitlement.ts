@@ -1,4 +1,4 @@
-import { EventEmitter } from 'eventemitter3';
+import { EventEmitter } from 'events';
 import { v5 as isUUIDv5 } from 'is-uuid';
 
 import {
@@ -31,11 +31,21 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
 
     private dependenciesState: Map<string, boolean>;
 
+    /**
+     * Number of allowed listeners is increased to a maximum limit (Number.MAX_SAFE_INTEGER) in order to
+     * suppress unwanted warnings.
+     * @param id 
+     * @param own 
+     * @param dependencies 
+     * @param state 
+     * @param metadata 
+     */
     constructor(id: string, own: any, dependencies: string[], state = 0, metadata?: EntitlementMetadata) {
         super();
         if (!isUUIDv5(id)) {
             throw new Error(`Entitlement id must be a valid UUID v.5 according to RFC4122, got ${id} instead.`);
         }
+        this.setMaxListeners(Number.MAX_SAFE_INTEGER);
         Object.assign(this, {
             id,
             own,
@@ -74,6 +84,7 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
     }
 
     private onDelete(): void {
+        this.state &= ~(COMPILED | VALID);
         this.emit(this.id, ENTITLEMENT.STATE.INVALID, this);
     }
 
@@ -98,6 +109,7 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
         if (wasDependable) {
             this.state &= ~(COMPILED | VALID);
             this.emit(this.id, ENTITLEMENT.STATE.INVALID, this);
+            this.emit(ENTITLEMENT.STATE.INVALID, this);
         }
     }
 
@@ -121,6 +133,9 @@ export class RegularEntitlement extends EventEmitter implements Entitlement {
     }
 
     public onStateChanged = (actionType: string, payload?: any): void => {
+        if (payload === this) {
+            return;
+        }
         switch (actionType) {
             case ENTITLEMENT.ADD.OK: {
                 this.onAdded();
