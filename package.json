@@ -22,10 +22,11 @@
   },
   "homepage": "https://github.com/d3m1urg/grants#readme",
   "dependencies": {
-    "async": "^2.1.4",
+    "@types/fs-extra": "^4.0.2",
     "babel-polyfill": "^6.16.0",
     "bunyan": "^1.8.5",
     "eventemitter3": "^2.0.2",
+    "fs-extra": "^4.0.2",
     "i18next": "^7.2.3",
     "immutable": "^3.8.1",
     "is-my-json-valid": "^2.15.0",

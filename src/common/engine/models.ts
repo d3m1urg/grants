@@ -39,3 +39,23 @@ export interface Registry {
     deleteEntitlement(entitlementId: string): void;
     updateEntitlement(entitlement: Entitlement): void;
 }
+
+export interface RuleArg {
+    type: string;
+    required: boolean;
+    label: string;
+}
+
+export interface Rule {
+    name: string;
+    label: string;
+    description: string;
+    args: RuleArg[];
+    fn: (...args: any[]) => boolean;
+    errorText: string;
+}
+
+export interface RulesModule {
+    rules: Rule[];
+    module: string;
+}
