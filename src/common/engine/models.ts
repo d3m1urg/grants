@@ -1,44 +1,68 @@
-export interface Profile {
-    id: string;
-    name: string;
-    state: string;
-    entitlements: Map<string, any>;
+/**
+ * Action interface describes generic change.
+ * When 'id' field is not provided while 'type' is (it always exists by design) type is used to emit appropriate event.
+ * If 'id' is present it's used in place of the type as an event name to narrow the number of called listeners.
+ */
+export interface Action {
+    type: string;
+    payload?: any;
+    id?: string;
 }
 
-export interface Entitlement {
-    id: string;
-    own: any;
-    compiled: any;
-    state: number;
-    dependencies: string[];
-    metadata?: EntitlementMetadata;
-    setDependenciesState(dependencies: Array<[string, boolean]>): void;
-    is(stateMask: number): boolean;
-    isCompilable(): boolean;
-    onStateChanged(actionType: string, payload?: any): void;
-    onDependencyChanged(actionType: string, dependency: Entitlement): void;
-}
-
-export interface EntitlementUpdate {
-    id: string;
-    own?: any;
-    dependencies?: string[];
-    metadata?: EntitlementMetadata;
-}
-
+/**
+ * serviceId        uuid v4
+ * schemaId         uuid v5 derived from serviceId
+ * schemaRevision   a semver-compatible revision
+ * tags             immutable set of arbitrary tags assigned to categorize entitlements
+ */
 export interface EntitlementMetadata {
     serviceId: string;
+    schemaId: string;
     schemaRevision: string;
     tags?: string[];
+};
+
+/**
+ * id               uuid v5
+ * completion       arbitrary shaped object used to correct final entitlements objects
+ * dependencies     array of entitlements ids which an entitlement object is derived from
+ * metadata         (see above)
+ */
+export interface Entitlement {
+    id: string;
+    completion: any;
+    dependencies: string[];
+    metadata?: EntitlementMetadata;
 }
 
-export interface Registry {
-    serviceId: string;
-    generateEntitlementId(): void;
-    addEntitlement(entitlement: Entitlement): void;
-    deleteEntitlement(entitlementId: string): void;
-    updateEntitlement(entitlement: Entitlement): void;
-}
+/**
+ * state            a bitmask representing current entitlements object state (e.g. ACTIVE, COMPILED, VALID etc.)
+ * compiled         object containing merged entitlements data
+ */
+export interface CompiledEntitlement extends Entitlement {
+    state: number;
+    compiled: any;
+};
+
+/**
+ * tags             immutable set of arbitrary tags assigned to categorize profiles
+ */
+export interface ProfileMetadata {
+    tags?: string[];
+};
+
+/**
+ * id               uuid v5 derived from serviceId
+ * state            a bitmask representing current profile state (e.g. ACTIVE, SEALED, PINNED etc.)
+ * entitlements     immutable map of entitlements objects
+ * metadata         (see above)
+ */
+export interface Profile {
+    id: string;
+    state: number;
+    entitlements: Map<string, Entitlement>;
+    metadata?: ProfileMetadata;
+};
 
 export interface RuleArg {
     type: string;

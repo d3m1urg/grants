@@ -42,12 +42,11 @@ const int = value => Number.isSafeInteger(value);
  * @return {[type]}       true is the number of digits equals 'prec', false otherwise
  */
 const precision = (value, prec) =>
-  (String(value).search(new RegExp(`^[0-9]+\.([0-9]{${prec}})$`)) >= 0);
+  (String(value).search(new RegExp(`^[0-9]+.([0-9]{${prec}})$`)) >= 0);
 
 /**
  * Exported array holds objects describing built-in rules.
- * It helps validating schemas obtained from external APIs to comply with the provided 
- * rule checking API.
+ * It helps validating schemas obtained from external APIs to comply with the provided rule checking API.
  * Each object in 'define' array has the following shape:
  *   {
  *     name:          'string'    -> a short rule name, almost always - the function name

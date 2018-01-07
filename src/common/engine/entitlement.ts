@@ -1,65 +1,44 @@
-import { EventEmitter } from 'events';
-import { v5 as isUUIDv5 } from 'is-uuid';
-
+import { EntitlementActions } from './actions';
+import { ENTITLEMENT } from './constants';
 import {
+    CompiledEntitlement,
     Entitlement,
     EntitlementMetadata,
-    EntitlementUpdate,
 } from './models';
 
-import { ENTITLEMENT } from './constants';
+import { ActionEventEmitter } from './eventemitter';
 
 const {
-    IS: {
+    STATE: {
         ACTIVE,
         COMPILED,
         VALID,
+        ANNOUNCED,
         IMPLICIT,
         SEALED,
         PINNED,
     },
 } = ENTITLEMENT;
 
-export class RegularEntitlement extends EventEmitter implements Entitlement {
+export class CommonEntitlement extends ActionEventEmitter<EntitlementActions> implements CompiledEntitlement {
 
     public id: string;
-    public own: any = null;
-    public compiled: any;
-    public state: number;
+    public completion: any;
     public dependencies: string[];
+    public state: number;
+    public depState: Map<string, boolean>;
     public metadata?: EntitlementMetadata;
+    public compiled: any;
 
-    private dependenciesState: Map<string, boolean>;
-
-    /**
-     * Number of allowed listeners is increased to a maximum limit (Number.MAX_SAFE_INTEGER) in order to
-     * suppress unwanted warnings.
-     * @param id 
-     * @param own 
-     * @param dependencies 
-     * @param state 
-     * @param metadata 
-     */
-    constructor(id: string, own: any, dependencies: string[], state = 0, metadata?: EntitlementMetadata) {
+    constructor(proto: Entitlement, depState: Map<string, boolean>) {
         super();
-        if (!isUUIDv5(id)) {
-            throw new Error(`Entitlement id must be a valid UUID v.5 according to RFC4122, got ${id} instead.`);
-        }
-        this.setMaxListeners(Number.MAX_SAFE_INTEGER);
-        Object.assign(this, {
-            id,
-            own,
-            state,
-            dependencies,
-            metadata,
-        });
-        this.initDependenciesState();
+        Object.assign(this, proto, { depState });
     }
 
-    private initDependenciesState(): void {
+    /* private initDependenciesState(): void {
         const dependenciesTuples = this.dependencies.map((id: string): [string, boolean] => [id, false]);
         this.dependenciesState = new Map<string, boolean>(dependenciesTuples);
-    }
+    } */
 
     private onCompiled(compiled: any): void {
         this.compiled = compiled;

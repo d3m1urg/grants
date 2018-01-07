@@ -28,6 +28,6 @@ Problem: there're N API revisions in production which require different entitlem
 Solution: each user entitlement must be tagged with schema id (name) and version number. When an API requests user entitlements a request should contain the userId, schema version and optionally a set of rules regarding version, e.g. =, >=, <=, != with an opportunity to use * instead of numbers in version string. Rule engine can be implemented as simple PEG grammar.
 Note that it implies that all profiles must be reassessed each time a schema version is promoted - especially when a rule is updated which can affect schema validation. It can be done as a part of staging process - a comprehensive check how the staged schema would affect existing profiles / environment. To do batch updates an SQL-like DSL may be used (future versions, not MVP).
 
-When a new schema is enrolled to production a so-called transition period starts. During this period users that were not switched to a new version of schema are still assessed agains old version and automatically receive upgraded (recalculated) entitlements definitions.
+When a new schema is enrolled to production a so-called transition period starts. During this period users that were not switched to a new version of schema are still assessed against old version and automatically receive upgraded (recalculated) entitlements definitions.
 
 BTW it's a good idea to use JSON-RPC as system implementation protocol.

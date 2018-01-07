@@ -1,77 +1,58 @@
+export const RESULT = {
+    OK:     'Result.Ok',
+    ERROR:  'Result.Error',
+};
+
 export const ENTITLEMENT = {
-    ADD: {
-        NOW: '[Entitlement] Add Now',
-        OK: '[Entitlement] Add Ok',
-        ERROR: '[Entitlement] Add Error',
-    },
-    COMPILE: {
-        NOW: '[Entitlement] Compile Now',
-        OK: '[Entitlement] Compile Ok',
-        ERROR: '[Entitlement] Compile Error',
-    },
-    VALIDATE: {
-        NOW: '[Entitlement] Validate Now',
-        OK: '[Entitlement] Validate Ok',
-        ERROR: '[Entitlement] Validate Error',
-    },
-    ANNOUNCE: {
-        NOW: '[Entitlement] Announce Now',
-        OK: '[Entitlement] Announce Ok',
-        ERROR: '[Entitlement] Announce Error',
-    },
-    UPDATE: {
-        NOW: '[Entitlement] Update Now',
-        OK: '[Entitlement] Update Ok',
-        ERROR: '[Entitlement] Update Error',
-    },
-    DELETE: {
-        NOW: '[Entitlement] Delete Now',
-        OK: '[Entitlement] Delete Ok',
-        ERROR: '[Entitlement] Delete Error',
-    },
-    CUSTOMIZE: {
-        NOW: '[Entitlement] Customize Now',
-        OK: '[Entitlement] Customize Ok',
-        ERROR: '[Entitlement] Customize Error',
+    ACTION: {
+        ADD:        'Entitlement.Add',
+        COMPILE:    'Entitlement.Compile',
+        VALIDATE:   'Entitlement.Validate',
+        ANNOUNCE:   'Entitlement.Announce',
+        UPDATE:     'Entitlement.Update',
+        DENOUNCE:   'Entitlement.Denounce',
+        INVALIDATE: 'Entitlement.Invalidate',
+        DELETE:     'Entitlement.Delete',
+        CUSTOMIZE:  'Entitlement.Customize',
     },
     STATE: {
-        INVALID: '[Entitlement] State Invalid',
-    },
-    IS: {
-        ACTIVE:     1, // can be inactivated -> set via 'CUSTOMIZE'
+        ACTIVE:     1,
         COMPILED:   1 << 1,
         VALID:      1 << 2,
-        IMPLICIT:   1 << 3, // can not be published -> set via 'CUSTOMIZE'
-        SEALED:     1 << 4, // can not be updated -> set via 'CUSTOMIZE'
-        PINNED:     1 << 5, // can not be deleted -> set via 'CUSTOMIZE'
+        ANNOUNCED:  1 << 3,
+        IMPLICIT:   1 << 4,
+        SEALED:     1 << 5,
+        PINNED:     1 << 6,
     },
 };
 
 export const COMPILER = {
-    MAKE: {
-        NOW: '[Compiler] Make Now',
-        OK: '[Compiler] Make Ok',
-        ERROR: '[Compiler] Make Error',
+    ACTION: {
+        COMPILED:           'Compiler.Compiled',
+        COMPILATION_FAILED: 'Compiler.Compilation_Failed', // 1 reason - due to missing dependency
+        CLEAR_CACHE:        'Compiler.Clear_Cache',
+        DELETE_CACHED:      'Compiler.Delete_Cached',
     },
 };
 
 export const COMPLIANCE = {
-     VERIFY: {
-        NOW: '[Compliance] Verify Now',
-        OK: '[Compliance] Verify Ok',
-        ERROR: '[Compliance] Verify Error',
+    ACTION: {
+        VALID:              'Compliance.Valid',
+        VALIDATION_FAILED:  'Compliance.Validation_Failed',
+    },
+};
+
+export const PROFILE = {
+    STATE: {
+        ACTIVE: 1,
+        SEALED: 1 << 1,
+        PINNED: 1 << 2,
     },
 };
 
 export const DIRECTORY = {
-    PUBLISH: {
-        NOW: '[Directory] Publish Now',
-        OK: '[Directory] Publish Ok',
-        ERROR: '[Directory] Publish Error',
-    },
-    REVOKE: {
-        NOW: '[Directory] Revoke Now',
-        OK: '[Directory] Revoke Ok',
-        ERROR: '[Directory] Revoke Error',
+    ACTION: {
+        PUBLISH:    'Directory.Publish',
+        REVOKE:     'Directory.Revoke',
     },
 };
