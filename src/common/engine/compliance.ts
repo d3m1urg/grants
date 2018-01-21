@@ -1,6 +1,7 @@
-
 export class ComplianceProcessor {
 
-    
+    constructor() {
+
+    }    
 
 }

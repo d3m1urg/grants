@@ -5,39 +5,60 @@
  */
 export interface Action {
     type: string;
-    payload?: any;
     id?: string;
+    payload?: any;
 }
 
 /**
- * serviceId        uuid v4
- * schemaId         uuid v5 derived from serviceId
- * schemaRevision   a semver-compatible revision
- * tags             immutable set of arbitrary tags assigned to categorize entitlements
+ * @interface Service
+ * @property { string } id         Unique auto-generated service UUID v4.
+ * @property { string } name       User-defined service name for display / search purposes.
+ * @property { string } uri        Service URI.
+ * @property { object } [metadata] Optional. Arbitrary service metadata.
  */
-export interface EntitlementMetadata {
-    serviceId: string;
-    schemaId: string;
-    schemaRevision: string;
+export interface Service {
+    id: string;
+    name: string;
+    uri: string;
+    metadata?: any;
+}
+
+/**
+ * @interface Schema
+ * @property { string }   id       Unique auto-generated schema UUID v5 derived from service id (see above).
+ * @property { string }   name     User-defined name of the schema (e.g. 'Manager', 'Senior accountant', etc.).
+ * @property { string }   revision A semver-compatible revision string.
+ * @property { object }   defaults Object containing all default values for keys (where specified).
+ * @property { Service }  service  Service that published the schema.
+ * @property { string[] } [tags]   Optional. Array of arbitrary tags assigned to categorize entitlements.
+ */
+export interface Schema {
+    id: string;
+    name: string;
+    revision: string;
+    defaults: any;
+    service: Service;
     tags?: string[];
 };
 
 /**
- * id               uuid v5
- * completion       arbitrary shaped object used to correct final entitlements objects
- * dependencies     array of entitlements ids which an entitlement object is derived from
- * metadata         (see above)
+ * @interface Entitlement
+ * @property { string }   id           Unique auto-generated entitlement UUID v5 derived from schema id (see above).
+ * @property { object }   completion   Arbitrary shaped object for correction of final entitlements objects.
+ * @property { string[] } dependencies Array of entitlements ids which an entitlement object is derived from.
+ * @property { Schema }   schema       Parent schema for this entitlement object.
  */
 export interface Entitlement {
     id: string;
     completion: any;
     dependencies: string[];
-    metadata?: EntitlementMetadata;
+    schema: Schema;
 }
 
 /**
- * state            a bitmask representing current entitlements object state (e.g. ACTIVE, COMPILED, VALID etc.)
- * compiled         object containing merged entitlements data
+ * @interface CompiledEntitlement
+ * @property { number } state    a bitmask representing current entitlements object state (e.g. ACTIVE, COMPILED etc.).
+ * @property { object } compiled object containing merged entitlements data.
  */
 export interface CompiledEntitlement extends Entitlement {
     state: number;
@@ -45,22 +66,30 @@ export interface CompiledEntitlement extends Entitlement {
 };
 
 /**
- * tags             immutable set of arbitrary tags assigned to categorize profiles
+ * @interface ProfileMetadata
+ * @property { string }   [externalId] Optional. External user identifier (e.g. 'domain/username' or 'name@domain.com').
+ * @property { string }   [uri]        Optional. Arbitrary URI for an external system containing profile subject info.
+ * @property { string[] } [tags]       Optional. Array of arbitrary tags assigned to categorize entitlements.
  */
 export interface ProfileMetadata {
+    externalId?: string;
+    uri?: string;
     tags?: string[];
 };
 
 /**
- * id               uuid v5 derived from serviceId
- * state            a bitmask representing current profile state (e.g. ACTIVE, SEALED, PINNED etc.)
- * entitlements     immutable map of entitlements objects
- * metadata         (see above)
+ * @interface Profile
+ * @property { string }          id           Unique auto-generated profile UUID v4.
+ * @property { string }          name         Profile label for UI.
+ * @property { number }          state        Bitmask representing current profile state (e.g. ACTIVE, SEALED etc.).
+ * @property { Entitlement[] }   entitlements Set of profile entitlements.
+ * @property { ProfileMetadata } metadata     Profile meta data for linking with external auth sources.
  */
 export interface Profile {
     id: string;
+    name: string;
     state: number;
-    entitlements: Map<string, Entitlement>;
+    entitlements: Entitlement[];
     metadata?: ProfileMetadata;
 };
 

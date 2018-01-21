@@ -1,0 +1,109 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "Grants.js common entitlements schema",
+    "type": "object",
+    "properties": {
+        "name": {
+            "$ref": "#/definitions/name"
+        },
+        "label": {
+            "$ref": "#/definitions/label"
+        },
+        "description": {
+            "$ref": "#/definitions/description"
+        },
+        "compliance": {
+            "$ref": "#/definitions/compliance"
+        },
+        "children": {
+            "$ref": "#/definitions/children"
+        }
+    },
+    "required": [ "name", "label", "children" ],
+    "additionalProperties": false,
+    "definitions": {
+        "rule": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/name"
+                },
+                "label": {
+                    "$ref": "#/definitions/label"
+                },
+                "description": {
+                    "$ref": "#/definitions/description"
+                },
+                "fn": {
+                    "type": "string"
+                },
+                "errorMessage": {
+                    "type": [ "string", "object" ]
+                }
+            },
+            "required": [ "name", "label", "description", "fn", "errorMessage" ],
+            "additionalProperties": false
+        },
+        "compliance": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/rule"
+            },
+            "minItems": 1
+        },
+        "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z\\$_]+[A-Za-z0-9\\$_]*$"
+        },
+        "label": {
+            "type": [ "string", "object" ]
+        },
+        "description": {
+            "type": [ "string", "object" ]
+        },
+        "child": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": { "$ref": "#/definitions/name" },
+                        "label": { "$ref": "#/definitions/label" },
+                        "description": { "$ref": "#/definitions/description" },
+                        "children": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/child"
+                            }
+                        }
+                    },
+                    "required": [ "name", "label", "children" ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": { "$ref": "#/definitions/name" },
+                        "label": { "$ref": "#/definitions/label" },
+                        "description": { "$ref": "#/definitions/description" },
+                        "type": {
+                            "type": "string",
+                            "enum": [ "boolean", "number", "string", "enum", "range" ]
+                        },
+                        "defaults": {
+                            "type": [ "boolean", "number", "string", "array", "null" ]
+                        }
+                    },
+                    "required": [ "name", "label", "type", "defaults" ],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "children": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/child"
+            },
+            "minItems": 1
+        }
+    }
+}
