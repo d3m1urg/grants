@@ -49,7 +49,7 @@ export class CachingCompiler extends ActionEventEmitter<CompilerActions> {
         if (!dependenciesOk) {
             return this.emitAction(new CompilationFailedAction(id, cachedDependencies as string[]));
         }
-        const compiledEntitlement = this.process(entitlement, cachedDependencies as Array<ImmutableMap<string, any>>);
+        const compiledEntitlement = this.assemble(entitlement, cachedDependencies as Array<ImmutableMap<string, any>>);
         return this.emitAction(new CompiledAction(id, compiledEntitlement));
     }
 
@@ -62,7 +62,7 @@ export class CachingCompiler extends ActionEventEmitter<CompilerActions> {
     }
 
     /**
-     * Compiles entitlement by merging in natural order all dependencies and completion object, then caches the
+     * Assembles entitlement by merging in natural order all dependencies and completion object, then caches the
      * resulting immutable map for further use.
      * Conflicts are resolved in favor of more significant schema in the chain with one exclusion: if more significant
      * property is explicitly set as undefined then less significant property prevails.
@@ -74,7 +74,7 @@ export class CachingCompiler extends ActionEventEmitter<CompilerActions> {
      * @param { Entitlement } entitlement the entitlement object to process
      * @returns { object } compiled entitlements object
      */
-    process(entitlement: Entitlement, dependencies: Array<ImmutableMap<string, any>>): any {
+    assemble(entitlement: Entitlement, dependencies: Array<ImmutableMap<string, any>>): any {
         const { completion } = entitlement;
         const mergeList: Array<ImmutableMap<string, any>> = [
             ...dependencies,

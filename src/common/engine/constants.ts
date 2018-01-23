@@ -37,8 +37,8 @@ export const COMPILER = {
 
 export const COMPLIANCE = {
     ACTION: {
-        VALID:              'Compliance.Valid',
-        VALIDATION_FAILED:  'Compliance.Validation_Failed',
+        VALID:   'Compliance.Valid',
+        INVALID: 'Compliance.Invalid',
     },
 };
 
@@ -52,7 +52,7 @@ export const PROFILE = {
 
 export const DIRECTORY = {
     ACTION: {
-        PUBLISH:    'Directory.Publish',
-        REVOKE:     'Directory.Revoke',
+        PUBLISH: 'Directory.Publish',
+        REVOKE:  'Directory.Revoke',
     },
 };
