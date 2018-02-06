@@ -1,12 +1,7 @@
 import { EntitlementActions } from './actions';
 import { ENTITLEMENT } from './constants';
-import {
-    CompiledEntitlement,
-    Entitlement,
-    EntitlementMetadata,
-} from './models';
-
 import { ActionEventEmitter } from './eventemitter';
+import { CompiledEntitlement, Entitlement, Schema } from './models';
 
 const {
     STATE: {
@@ -25,14 +20,14 @@ export class CommonEntitlement extends ActionEventEmitter<EntitlementActions> im
     public id: string;
     public completion: any;
     public dependencies: string[];
+    public schema: Schema
     public state: number;
-    public depState: Map<string, boolean>;
-    public metadata?: EntitlementMetadata;
     public compiled: any;
+    public dependenciesState: Map<string, boolean>;
 
-    constructor(proto: Entitlement, depState: Map<string, boolean>) {
+    constructor(proto: Entitlement, dependenciesState: Map<string, boolean>) {
         super();
-        Object.assign(this, proto, { depState });
+        Object.assign(this, proto, { dependenciesState });
     }
 
     /* private initDependenciesState(): void {

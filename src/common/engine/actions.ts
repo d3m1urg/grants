@@ -13,7 +13,7 @@ const {
 const {
     ACTION: {
         VALID,
-        VALIDATION_FAILED,
+        INVALID,
     },
 } = COMPLIANCE;
 
@@ -47,11 +47,11 @@ export class ValidateAction implements Action {
 
 export class ValidAction implements Action {
     readonly type = VALID;
-    constructor(public id: string, public payload: boolean) {}
+    constructor(public id: string) {}
 }
 
-export class ValidationFailedAction implements Action {
-    readonly type = VALIDATION_FAILED;
+export class InvalidAction implements Action {
+    readonly type = INVALID;
     constructor(public id: string) {}
 }
 
@@ -89,3 +89,8 @@ export type CompilerActions =   CompileAction |
                                 CompilationFailedAction |
                                 DeleteCachedAction |
                                 ClearCacheAction;
+
+export type ComplianceInputActions = ValidateAction;
+
+export type ComplianceOutputActions =   ValidAction |
+                                        InvalidAction;

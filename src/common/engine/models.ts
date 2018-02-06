@@ -30,6 +30,7 @@ export interface Service {
  * @property { string }   revision A semver-compatible revision string.
  * @property { object }   defaults Object containing all default values for keys (where specified).
  * @property { Service }  service  Service that published the schema.
+ * @property { Complies } comply   Array of compliance rules applied during entitlements validation.
  * @property { string[] } [tags]   Optional. Array of arbitrary tags assigned to categorize entitlements.
  */
 export interface Schema {
@@ -38,6 +39,7 @@ export interface Schema {
     revision: string;
     defaults: any;
     service: Service;
+    comply?: Complies;
     tags?: string[];
 };
 
@@ -93,22 +95,19 @@ export interface Profile {
     metadata?: ProfileMetadata;
 };
 
-export interface RuleArg {
-    type: string;
-    required: boolean;
-    label: string;
-}
-
-export interface Rule {
+export interface Comply {
     name: string;
-    label: string;
-    description: string;
-    args: RuleArg[];
-    fn: (...args: any[]) => boolean;
-    errorText: string;
+    label: string | object;
+    description: string | object;
+    errorText: string | object;
 }
 
-export interface RulesModule {
-    rules: Rule[];
-    module: string;
+export interface FnComply extends Comply {
+    fn: (...args: any[]) => boolean;
 }
+
+export interface ShapeComply extends Comply{
+    schema: string;
+}
+
+export type Complies = ShapeComply | FnComply;

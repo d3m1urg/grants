@@ -22,7 +22,7 @@
     "required": [ "name", "label", "children" ],
     "additionalProperties": false,
     "definitions": {
-        "rule": {
+        "comply": {
             "type": "object",
             "properties": {
                 "name": {
@@ -34,20 +34,55 @@
                 "description": {
                     "$ref": "#/definitions/description"
                 },
-                "fn": {
-                    "type": "string"
-                },
                 "errorMessage": {
                     "type": [ "string", "object" ]
                 }
             },
-            "required": [ "name", "label", "description", "fn", "errorMessage" ],
-            "additionalProperties": false
+            "required": [ "name", "label", "description", "errorMessage" ]
+        },
+        "fn": {
+            "type": "object",
+            "properties": {
+                "fn": {
+                    "type": "string"
+                }
+            },
+            "required": [ "fn" ]
+        },
+        "shape": {
+            "type": "object",
+            "properties": {
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "required": [ "schema" ]
         },
         "compliance": {
             "type": "array",
             "items": {
-                "$ref": "#/definitions/rule"
+                "oneOf": [
+                    {
+                        "allOf": [
+                            {
+                                "$ref": "#/definitions/comply"
+                            },
+                            {
+                                "$ref": "#/definitions/fn"
+                            }
+                        ]
+                    },
+                    {
+                        "allOf": [
+                            {
+                                "$ref": "#/definitions/comply"
+                            },
+                            {
+                                "$ref": "#/definitions/shape"
+                            }
+                        ]
+                    }
+                ]
             },
             "minItems": 1
         },

@@ -1,7 +1,13 @@
-export class ComplianceProcessor {
+import { ComplianceInputActions, ComplianceOutputActions } from './actions';
+import { ActionEventEmitter } from './eventemitter';
 
-    constructor() {
+export class CachingCompliance extends ActionEventEmitter<ComplianceOutputActions> {
 
-    }    
+    private eventBus: ActionEventEmitter<ComplianceInputActions>;
+
+    constructor(eventBus: ActionEventEmitter<ComplianceInputActions>) {
+        super();
+        this.eventBus = eventBus;
+    }
 
 }
